@@ -63,7 +63,7 @@ class Page(PageBase):
 # Railway Line Models
 class LineBase(BaseModel):
     line_number: str
-    description: str
+    description: Optional[str] = ""
     status: str = "active"
     gauge_type: Optional[str] = None  # 'iberico', 'metrico', 'internacional'
     cities_served: List[str] = []

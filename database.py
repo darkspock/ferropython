@@ -275,11 +275,11 @@ class BlogDatabase:
             total_count = query.count()
             total_pages = (total_count + per_page - 1) // per_page
 
-            # Get posts for current page
+            # Get posts for current page - order by updated_at descending (most recent first)
             skip = (page - 1) * per_page
             posts = (
                 query
-                .order_by(desc(PostModel.created_at))
+                .order_by(desc(PostModel.updated_at), desc(PostModel.created_at))
                 .offset(skip)
                 .limit(per_page)
                 .all()
@@ -292,6 +292,7 @@ class BlogDatabase:
                     content=str(post.content),
                     author=str(post.author),
                     is_published=bool(post.is_published),
+                    category_id=post.category_id,
                     created_at=post.created_at,
                     updated_at=post.updated_at,
                 )
@@ -317,7 +318,7 @@ class BlogDatabase:
             if category_id:
                 query = query.filter(PostModel.category_id == category_id)
             posts = (
-                query.order_by(desc(PostModel.created_at))
+                query.order_by(desc(PostModel.updated_at), desc(PostModel.created_at))
                 .offset(skip)
                 .limit(limit)
                 .all()
@@ -634,8 +635,9 @@ class BlogDatabase:
             if db_line:
                 if line_data.line_number is not None:
                     db_line.line_number = line_data.line_number
+                # Allow empty strings for description
                 if line_data.description is not None:
-                    db_line.description = line_data.description
+                    db_line.description = line_data.description or ""
                 if line_data.status is not None:
                     db_line.status = line_data.status
                 if line_data.gauge_type is not None:
@@ -1441,6 +1443,68 @@ class BlogDatabase:
             ]
 
             return post_list, total_pages
+        finally:
+            db.close()
+
+    def get_recent_entries(self, limit: int = 5) -> List[dict]:
+        """Get the most recent entries from all entities (posts, lines, stations, projects, cities)"""
+        db = self.get_db()
+        try:
+            entries = []
+            
+            # Get recent posts
+            posts = db.query(PostModel).filter(PostModel.is_published == True).order_by(desc(PostModel.updated_at)).limit(limit * 2).all()
+            for post in posts:
+                entries.append({
+                    'type': 'post',
+                    'title': post.title,
+                    'url': f'/post/{post.id}',
+                    'updated_at': post.updated_at or post.created_at,
+                })
+            
+            # Get recent lines
+            lines = db.query(LineModel).order_by(desc(LineModel.updated_at)).limit(limit * 2).all()
+            for line in lines:
+                entries.append({
+                    'type': 'line',
+                    'title': f'Línea {line.line_number}',
+                    'url': f'/lines/{line.id}',
+                    'updated_at': line.updated_at or line.created_at,
+                })
+            
+            # Get recent stations
+            stations = db.query(StationModel).order_by(desc(StationModel.updated_at)).limit(limit * 2).all()
+            for station in stations:
+                entries.append({
+                    'type': 'station',
+                    'title': station.name,
+                    'url': f'/stations/{station.id}',
+                    'updated_at': station.updated_at or station.created_at,
+                })
+            
+            # Get recent projects
+            projects = db.query(ProjectModel).order_by(desc(ProjectModel.updated_at)).limit(limit * 2).all()
+            for project in projects:
+                entries.append({
+                    'type': 'project',
+                    'title': project.title,
+                    'url': f'/projects/{project.id}',
+                    'updated_at': project.updated_at or project.created_at,
+                })
+            
+            # Get recent cities
+            cities = db.query(CityModel).order_by(desc(CityModel.updated_at)).limit(limit * 2).all()
+            for city in cities:
+                entries.append({
+                    'type': 'city',
+                    'title': city.name,
+                    'url': f'/cities/{city.slug}',
+                    'updated_at': city.updated_at or city.created_at,
+                })
+            
+            # Sort all entries by updated_at descending and take the most recent ones
+            entries.sort(key=lambda x: x['updated_at'], reverse=True)
+            return entries[:limit]
         finally:
             db.close()
 

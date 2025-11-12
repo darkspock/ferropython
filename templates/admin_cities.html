@@ -1,17 +1,18 @@
-{% extends "base.html" %}
+{% extends "admin_layout.html" %}
 
-{% block title %}Admin - Ciudades{% endblock %}
+{% block title %}Ciudades - Panel de Administración{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3">Ciudades</h1>
+<div class="admin-page-header">
+    <h1>Ciudades</h1>
+    <div class="admin-actions">
         <a href="/admin/cities/new" class="btn btn-primary">
             <i class="fas fa-plus me-2"></i>Nueva Ciudad
         </a>
     </div>
+</div>
 
-    {% if cities %}
+{% if cities %}
     <div class="table-responsive">
         <table class="table table-striped table-hover">
             <thead class="table-dark">
@@ -34,11 +35,11 @@
                     <td>{{ city.country }}</td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="/cities/{{ city.slug }}" class="btn btn-sm btn-outline-primary" title="Ver">
-                                <i class="fas fa-eye"></i>
+                            <a href="/admin/cities/{{ city.id }}/edit" class="btn btn-sm btn-primary" title="Editar">
+                                <i class="fas fa-edit me-1"></i>Editar
                             </a>
-                            <a href="/admin/cities/{{ city.id }}/edit" class="btn btn-sm btn-outline-warning" title="Editar">
-                                <i class="fas fa-edit"></i>
+                            <a href="/cities/{{ city.slug }}" class="btn btn-sm btn-outline-secondary" title="Ver">
+                                <i class="fas fa-eye"></i>
                             </a>
                             <form method="POST" action="/admin/cities/{{ city.id }}/delete" style="display: inline;">
                                 <button type="submit" class="btn btn-sm btn-outline-danger" title="Eliminar" 
@@ -53,15 +54,14 @@
             </tbody>
         </table>
     </div>
-    {% else %}
-    <div class="text-center py-5">
-        <i class="fas fa-city fa-3x text-muted mb-3"></i>
-        <h4 class="text-muted">No hay ciudades registradas</h4>
-        <p class="text-muted">Comience agregando una nueva ciudad.</p>
-        <a href="/admin/cities/new" class="btn btn-primary">
-            <i class="fas fa-plus me-2"></i>Agregar Primera Ciudad
-        </a>
-    </div>
-    {% endif %}
+{% else %}
+<div class="text-center py-5">
+    <i class="fas fa-city fa-3x text-muted mb-3"></i>
+    <h4 class="text-muted">No hay ciudades registradas</h4>
+    <p class="text-muted">Comience agregando una nueva ciudad.</p>
+    <a href="/admin/cities/new" class="btn btn-primary">
+        <i class="fas fa-plus me-2"></i>Agregar Primera Ciudad
+    </a>
 </div>
+{% endif %}
 {% endblock %}

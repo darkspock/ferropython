@@ -40,9 +40,31 @@
 
 {% block content %}
 <section id="inicio" class="section">
-    <h2>Ferrocarril Esp</h2>
-    <p>El blog del ferrocarril en España</p>
+    <h2>{% if category %}{{ category.name }}{% else %}Ferrocarril Esp{% endif %}</h2>
+    <p>{% if category %}{{ category.description or 'El blog del ferrocarril en España' }}{% else %}El blog del ferrocarril en España{% endif %}</p>
     
+    <!-- Posts appear right after the category title -->
+    <div class="latest-posts">
+        <div id="news-container">
+            {% if posts|length > 0 %}
+                {% for post in posts %}
+                <div class="post">
+                    <h4><a href="/post/{{ post.id }}">{{ post.title }}</a></h4>
+                    <div class="post-meta">
+                        <span>📅 {{ post.created_at.strftime('%d de %B de %Y') }}</span> |
+                        <span>👤 {{ post.author }}</span>
+                    </div>
+                    <p>{{ post.content[:150]|strip_html }}{% if post.content|length > 150 %}...{% endif %}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No hay noticias disponibles en este momento.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Secciones del Blog - Only show on home page (when no category is selected) -->
+    {% if not category %}
     <div class="secciones-overview">
         <h3>Secciones del Blog</h3>
         <div class="secciones-grid">
@@ -90,26 +112,7 @@
             </div>
         </div>
     </div>
-
-    <div class="latest-posts">
-        <h3>Últimas Noticias</h3>
-        <div id="news-container">
-            {% if posts|length > 0 %}
-                {% for post in posts[:5] %}
-                <div class="post">
-                    <h4><a href="/post/{{ post.id }}">{{ post.title }}</a></h4>
-                    <div class="post-meta">
-                        <span>📅 {{ post.created_at.strftime('%d de %B de %Y') }}</span> |
-                        <span>👤 {{ post.author }}</span>
-                    </div>
-                    <p>{{ post.content[:150]|strip_html }}{% if post.content|length > 150 %}...{% endif %}</p>
-                </div>
-                {% endfor %}
-            {% else %}
-                <p>No hay noticias disponibles en este momento.</p>
-            {% endif %}
-        </div>
-    </div>
+    {% endif %}
 </section>
 
 <!-- Comments Section -->
@@ -134,7 +137,7 @@
     <h2 class="screen-reader-text">Navegación de publicaciones</h2>
     <div class="nav-links">
         {% if pagination.has_prev %}
-        <a class="prev page-numbers" href="?page={{ pagination.prev_num }}">
+        <a class="prev page-numbers" href="{% if category %}/posts/{{ category.slug }}{% else %}/{% endif %}?page={{ pagination.prev_num }}">
             <i class="fas fa-angle-left"></i> Anterior
         </a>
         {% endif %}
@@ -143,14 +146,14 @@
             {% if page_num == pagination.page %}
             <span class="page-numbers current">{{ page_num }}</span>
             {% elif page_num == 1 or page_num == pagination.total_pages or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
-            <a class="page-numbers" href="?page={{ page_num }}">{{ page_num }}</a>
+            <a class="page-numbers" href="{% if category %}/posts/{{ category.slug }}{% else %}/{% endif %}?page={{ page_num }}">{{ page_num }}</a>
             {% elif page_num == pagination.page - 3 or page_num == pagination.page + 3 %}
             <span class="page-numbers dots">…</span>
             {% endif %}
         {% endfor %}
         
         {% if pagination.has_next %}
-        <a class="next page-numbers" href="?page={{ pagination.next_num }}">
+        <a class="next page-numbers" href="{% if category %}/posts/{{ category.slug }}{% else %}/{% endif %}?page={{ pagination.next_num }}">
             Siguiente <i class="fas fa-angle-right"></i>
         </a>
         {% endif %}

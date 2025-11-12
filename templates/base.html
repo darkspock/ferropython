@@ -23,7 +23,6 @@
                 
                 <nav class="nav">
                     <ul class="nav-menu">
-                        <li><a href="/">Inicio</a></li>
                         <li class="dropdown">
                             <a href="/lines">Líneas</a>
                             <ul class="dropdown-menu">
@@ -44,8 +43,9 @@
                                 <li><a href="/projects?status=suspended">Suspendido</a></li>
                             </ul>
                         </li>
-                        <li><a href="/events">Curiosidades</a></li>
-                        <li><a href="/">Noticias</a></li>
+                        <li><a href="/posts/curiosidades">Curiosidades</a></li>
+                        <li><a href="/posts/noticias">Noticias</a></li>
+                        <li><a href="/posts/eventos">Eventos</a></li>
                         <li><a href="/cities">Desarrollo<br>ciudades</a></li>
                         <li><a href="/stations">Estaciones de<br>tren</a></li>
                     </ul>
@@ -55,10 +55,6 @@
                     {% if is_admin %}
                     <div class="admin-menu-item">
                         <a href="/admin"><i class="fas fa-cog"></i> Admin</a>
-                    </div>
-                    {% else %}
-                    <div class="login-button">
-                        <a href="/login"><i class="fas fa-user"></i> Login</a>
                     </div>
                     {% endif %}
                     
@@ -191,7 +187,7 @@
                             <li class="cat-item"><a href="/lines">Líneas</a></li>
                             <li class="cat-item"><a href="/stations">Estaciones</a></li>
                             <li class="cat-item"><a href="/projects">Proyectos</a></li>
-                            <li class="cat-item"><a href="/events">Eventos</a></li>
+                            <li class="cat-item"><a href="/posts/eventos">Eventos</a></li>
                             <li class="cat-item"><a href="/cities">Ciudades</a></li>
                         </ul>
                     </section>
@@ -199,10 +195,13 @@
                     <section class="widget widget_recent_entries">
                         <h2 class="widget-title">Entradas Recientes</h2>
                         <ul>
-                            <li><a href="#">Nueva línea de alta velocidad Madrid-León</a></li>
-                            <li><a href="#">Modernización de la estación de Atocha</a></li>
-                            <li><a href="#">Inauguración del nuevo tren regional</a></li>
-                            <li><a href="#">Plan de expansión ferroviaria 2025-2030</a></li>
+                            {% if recent_entries %}
+                                {% for entry in recent_entries %}
+                                <li><a href="{{ entry.url }}">{{ entry.title }}</a></li>
+                                {% endfor %}
+                            {% else %}
+                                <li><a href="#">No hay entradas recientes</a></li>
+                            {% endif %}
                         </ul>
                     </section>
                 </aside>
@@ -230,7 +229,7 @@
                                         <li class="menu-item"><a href="/lines">Líneas</a></li>
                                         <li class="menu-item"><a href="/stations">Estaciones</a></li>
                                         <li class="menu-item"><a href="/projects">Proyectos</a></li>
-                                        <li class="menu-item"><a href="/events">Eventos</a></li>
+                                        <li class="menu-item"><a href="/posts/eventos">Eventos</a></li>
                                     </ul>
                                 </div>
                             </section>

@@ -52,14 +52,17 @@
             <aside class="col-md-3 col-lg-2 d-md-block admin-sidebar" id="adminSidebar">
                 <nav class="admin-nav">
                     <div class="nav-section">
-                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small text-muted">Principal</h6>
+                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small">Principal</h6>
                         <a class="nav-link {% if request.url.path == '/admin/dashboard' %}active{% endif %}" href="/admin/dashboard">
                             <i class="fas fa-tachometer-alt"></i>Dashboard
                         </a>
                     </div>
                     
                     <div class="nav-section">
-                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small text-muted">Contenido</h6>
+                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small">Contenido</h6>
+                        <a class="nav-link {% if '/admin/posts' in request.url.path %}active{% endif %}" href="/admin/posts">
+                            <i class="fas fa-newspaper"></i>Posts
+                        </a>
                         <a class="nav-link {% if 'lines' in request.url.path %}active{% endif %}" href="/admin/lines">
                             <i class="fas fa-route"></i>Líneas
                         </a>
@@ -69,25 +72,12 @@
                         <a class="nav-link {% if 'projects' in request.url.path %}active{% endif %}" href="/admin/projects">
                             <i class="fas fa-project-diagram"></i>Proyectos
                         </a>
-                        <a class="nav-link {% if 'events' in request.url.path %}active{% endif %}" href="/admin/events">
-                            <i class="fas fa-calendar-alt"></i>Eventos
-                        </a>
                     </div>
                     
                     <div class="nav-section">
-                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small text-muted">Organización</h6>
+                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small">Organización</h6>
                         <a class="nav-link {% if 'cities' in request.url.path %}active{% endif %}" href="/admin/cities">
                             <i class="fas fa-city"></i>Ciudades
-                        </a>
-                        <a class="nav-link {% if 'categories' in request.url.path %}active{% endif %}" href="/admin/categories">
-                            <i class="fas fa-tags"></i>Categorías
-                        </a>
-                    </div>
-                    
-                    <div class="nav-section">
-                        <h6 class="nav-section-title px-3 pt-3 pb-2 text-uppercase small text-muted">Sistema</h6>
-                        <a class="nav-link" href="/admin/settings">
-                            <i class="fas fa-cog"></i>Configuración
                         </a>
                     </div>
                 </nav>

@@ -142,6 +142,17 @@ footer {
 }
 
 /* Admin Cards */
+.admin-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+
+.admin-card-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
 .admin-card {
     background: white;
     border: none;
@@ -149,15 +160,23 @@ footer {
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     transition: all 0.3s ease;
     overflow: hidden;
+    cursor: pointer;
 }
 
-.admin-card:hover {
+.admin-card-link:hover .admin-card {
     transform: translateY(-2px);
     box-shadow: 0 8px 16px rgba(0,0,0,0.1);
 }
 
 .admin-card .card-body {
     padding: 1.5rem;
+}
+
+.admin-card .stat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
 }
 
 .admin-card .stat-icon {
@@ -168,14 +187,14 @@ footer {
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
-    margin-bottom: 1rem;
+    flex-shrink: 0;
 }
 
 .admin-card .stat-number {
     font-size: 2rem;
     font-weight: 700;
-    color: #212529;
-    margin-bottom: 0.25rem;
+    color: white;
+    margin: 0;
 }
 
 .admin-card .stat-label {
@@ -451,6 +470,10 @@ footer {
         color: #e2e8f0;
     }
     
+    .nav-section-title {
+        color: white;
+    }
+    
     .admin-table tbody tr:hover {
         background-color: #4a5568;
     }
@@ -466,7 +489,7 @@ footer {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    color: #6c757d;
+    color: white;
     padding: 1rem 1.5rem 0.5rem;
 }
 

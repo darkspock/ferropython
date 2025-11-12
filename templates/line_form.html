@@ -70,17 +70,6 @@
                                 <input type="number" step="0.1" class="form-control" id="length" name="length" 
                                        value="{{ line.length if line else '' }}">
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="category_id" class="form-label">Categoría</label>
-                                <select class="form-select" id="category_id" name="category_id">
-                                    <option value="">Seleccionar categoría</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}" {{ 'selected' if line and line.category_id == category.id else '' }}>
-                                        {{ category.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -109,19 +98,32 @@ tinymce.init({
     selector: 'textarea',
     plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
     toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+    setup: function(editor) {
+        editor.on('init', function() {
+            // Ensure content is saved when editor is initialized
+            editor.save();
+        });
+    }
 });
 
 // Sync TinyMCE content before form submission
 document.querySelector('form').addEventListener('submit', function(e) {
-    tinymce.triggerSave();
-    // Validate description field
-    const description = document.getElementById('description').value.trim();
-    if (!description) {
-        e.preventDefault();
-        alert('Por favor, complete el campo Descripción');
-        tinymce.get('description').focus();
-        return false;
+    // Save all TinyMCE editors before form submission
+    if (typeof tinymce !== 'undefined') {
+        tinymce.triggerSave();
     }
+    // Validate description field after TinyMCE save
+    const descriptionField = document.getElementById('description');
+    const description = descriptionField ? descriptionField.value.trim() : '';
+    // Note: Description is now optional in the backend, but we can still validate if needed
+    // if (!description) {
+    //     e.preventDefault();
+    //     alert('Por favor, complete el campo Descripción');
+    //     if (tinymce && tinymce.get('description')) {
+    //         tinymce.get('description').focus();
+    //     }
+    //     return false;
+    // }
 });
 </script>
 {% endblock %}

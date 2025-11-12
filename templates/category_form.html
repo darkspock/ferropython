@@ -31,11 +31,17 @@
                             <label for="parent_id" class="form-label">Categoría Padre</label>
                             <select class="form-select" id="parent_id" name="parent_id">
                                 <option value="">Sin categoría padre</option>
-                                {% for cat in categorias %}
-                                <option value="{{ cat.id }}" {{ 'selected' if category and category.parent_id == cat.id else '' }}>
-                                    {{ cat.name }}
-                                </option>
-                                {% endfor %}
+                                {% if categorias %}
+                                    {% for cat in categorias %}
+                                        {% if not category or cat.id != category.id %}
+                                        <option value="{{ cat.id }}" {{ 'selected' if category and category.parent_id == cat.id else '' }}>
+                                            {{ cat.name }}
+                                        </option>
+                                        {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="">No hay categorías disponibles</option>
+                                {% endif %}
                             </select>
                             <div class="form-text">Opcional. Para crear subcategorías.</div>
                         </div>

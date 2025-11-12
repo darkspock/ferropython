@@ -63,17 +63,6 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label for="category_id" class="form-label">Categoría</label>
-                                <select class="form-select" id="category_id" name="category_id">
-                                    <option value="">Seleccionar categoría</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}" {{ 'selected' if project and project.category_id == category.id else '' }}>
-                                        {{ category.name }}
-                                    </option>
-                                    {% endfor %}
-                                </select>
-                            </div>
-                            <div class="col-md-6 mb-3">
                                 <label for="city_id" class="form-label">Ciudad</label>
                                 <select class="form-select" id="city_id" name="city_id">
                                     <option value="">Seleccionar ciudad</option>

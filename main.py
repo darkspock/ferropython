@@ -90,6 +90,14 @@ def is_authenticated(request: Request) -> bool:
     return auth_token == SECRET_KEY
 
 
+def get_template_context(request: Request) -> dict:
+    """Get common template context for all pages"""
+    return {
+        "is_admin": is_authenticated(request),
+        "recent_entries": db.get_recent_entries(limit=5),
+    }
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
@@ -114,33 +122,19 @@ templates.env.filters["strip_html"] = strip_html
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request, page: int = 1, cat: Optional[int] = None):
-    # Get "Noticias" category if it exists, otherwise show all posts
-    noticias_category = db.get_category_by_slug("noticias")
-    category_id = None
-    category = None
-    
-    if cat:
-        category = db.get_category(cat)
-        category_id = cat
-    elif noticias_category:
-        # Default to "Noticias" category if no specific category is requested
-        category = noticias_category
-        category_id = noticias_category.id
-    
-    posts, total_pages = db.get_published_posts_paginated(page, per_page=5, category_id=category_id)
-    pagination = Pagination(page, total_pages, per_page=5)
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request,
-            "posts": posts,
-            "pagination": pagination,
-            "is_admin": is_authenticated(request),
-            "category_id": category_id,
-            "category": category,
-        },
-    )
+async def home(request: Request):
+    # Redirect to /posts/noticias by default
+    return RedirectResponse(url="/posts/noticias", status_code=303)
+
+
+def render_template(request: Request, template_name: str, context: dict = None):
+    """Helper function to render template with common context"""
+    if context is None:
+        context = {}
+    # Merge common context with provided context
+    common_context = get_template_context(request)
+    context.update(common_context)
+    return templates.TemplateResponse(template_name, {"request": request, **context})
 
 
 @app.get("/post/{post_id}", response_class=HTMLResponse)
@@ -148,14 +142,7 @@ async def get_post(request: Request, post_id: int):
     post = db.get_post(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return templates.TemplateResponse(
-        "post.html",
-        {
-            "request": request,
-            "post": post,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "post.html", {"post": post})
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -188,15 +175,18 @@ async def admin_redirect(request: Request):
 
 
 @app.get("/admin/posts", response_class=HTMLResponse)
-async def admin_posts(request: Request, page: int = 1):
-    posts, total_pages = db.get_published_posts_paginated(page, per_page=10)
-    pagination = Pagination(page, total_pages, per_page=10)
+async def admin_posts(request: Request):
+    try:
+        posts = db.get_posts(published_only=False, limit=1000)
+    except:
+        posts = []
+    categories = db.get_categories()
     return templates.TemplateResponse(
-        "admin.html",
+        "admin_posts.html",
         {
             "request": request,
             "posts": posts,
-            "pagination": pagination,
+            "categories": categories,
         },
     )
 
@@ -264,7 +254,12 @@ async def admin_dashboard_main(request: Request):
 
 @app.get("/new", response_class=HTMLResponse)
 async def new_post_form(request: Request):
-    categories = db.get_categories()
+    # Get all categories, but filter to show only Noticias, Curiosidades, and Eventos for posts
+    all_categories = db.get_categories()
+    # Filter to only show the main post categories (Noticias, Curiosidades, Eventos)
+    post_categories = [cat for cat in all_categories if cat.slug in ['noticias', 'curiosidades', 'eventos']]
+    # If those don't exist, show all categories as fallback
+    categories = post_categories if post_categories else all_categories
     return templates.TemplateResponse("new_post.html", {"request": request, "categories": categories})
 
 
@@ -288,9 +283,75 @@ async def edit_post_form(request: Request, post_id: int):
     post = db.get_post(post_id)
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    categories = db.get_categories()
+    # Filter to only show the main post categories (Noticias, Curiosidades, Eventos)
+    all_categories = db.get_categories()
+    post_categories = [cat for cat in all_categories if cat.slug in ['noticias', 'curiosidades', 'eventos']]
+    # If those don't exist, show all categories as fallback
+    categories = post_categories if post_categories else all_categories
     return templates.TemplateResponse(
         "edit_post.html", {"request": request, "post": post, "categories": categories}
+    )
+
+
+# Posts by Category Route - MUST be before /posts/{post_id} routes
+# This route handles /posts/{category_slug} where category_slug is a string (not numeric)
+@app.get("/posts/{category_slug}", response_class=HTMLResponse)
+async def list_posts_by_category(request: Request, category_slug: str, page: int = 1):
+    # Validate that category_slug is not numeric (to avoid conflicts with /posts/{post_id})
+    # If it's numeric, it should go to /post/{post_id} instead
+    if category_slug.isdigit():
+        raise HTTPException(status_code=404, detail="Use /post/{post_id} to view individual posts")
+    
+    # Get category by slug
+    try:
+        category = db.get_category_by_slug(category_slug)
+    except Exception as e:
+        # Log error and show all posts
+        print(f"Error getting category by slug '{category_slug}': {e}")
+        posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=None)
+        pagination = Pagination(page, total_pages, per_page=10)
+        return render_template(
+            request,
+            "index.html",
+            {
+                "posts": posts,
+                "pagination": pagination,
+                "category_id": None,
+                "category": None,
+                "error_message": f"Error al buscar la categoría '{category_slug}'. Mostrando todos los posts.",
+            },
+        )
+    
+    if not category:
+        # If category doesn't exist, show all posts with a message
+        posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=None)
+        pagination = Pagination(page, total_pages, per_page=10)
+        return render_template(
+            request,
+            "index.html",
+            {
+                "posts": posts,
+                "pagination": pagination,
+                "category_id": None,
+                "category": None,
+                "error_message": f"La categoría '{category_slug}' no existe. Mostrando todos los posts.",
+            },
+        )
+    
+    # Get posts filtered by category
+    posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=category.id)
+    pagination = Pagination(page, total_pages, per_page=10)
+    
+    # Use index.html template for posts listing
+    return render_template(
+        request,
+        "index.html",
+        {
+            "posts": posts,
+            "pagination": pagination,
+            "category_id": category.id,
+            "category": category,
+        },
     )
 
 
@@ -354,14 +415,13 @@ async def search_posts(request: Request, q: str = "", page: int = 1):
 
     posts, total_pages = db.search_posts_paginated(q, page, per_page=5)
     pagination = Pagination(page, total_pages, per_page=5)
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "search.html",
         {
-            "request": request,
             "posts": posts,
             "query": q,
             "pagination": pagination,
-            "is_admin": is_authenticated(request),
         },
     )
 
@@ -411,14 +471,7 @@ async def get_page(request: Request, slug: str):
     page = db.get_page_by_slug(slug)
     if not page or not page.is_published:
         raise HTTPException(status_code=404, detail="Page not found")
-    return templates.TemplateResponse(
-        "page.html",
-        {
-            "request": request,
-            "page": page,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "page.html", {"page": page})
 
 
 @app.get("/admin/pages/{page_id}/edit", response_class=HTMLResponse)
@@ -484,12 +537,11 @@ async def list_lines(
         line_status = status_map.get(status, status)
     
     lines = db.get_lines(gauge_type=gauge_type, status=line_status)
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "lines.html",
         {
-            "request": request,
             "lines": lines,
-            "is_admin": is_authenticated(request),
             "filter_type": type,
             "filter_status": status,
         },
@@ -507,14 +559,7 @@ async def get_line(request: Request, line_id: int):
     line = db.get_line(line_id)
     if not line:
         raise HTTPException(status_code=404, detail="Line not found")
-    return templates.TemplateResponse(
-        "line.html",
-        {
-            "request": request,
-            "line": line,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "line.html", {"line": line})
 
 
 # Railway Routes - Stations
@@ -553,12 +598,11 @@ async def list_stations(
         station_dict['city_name'] = city_name
         stations_with_names.append(station_dict)
     
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "stations.html",
         {
-            "request": request,
             "stations": stations_with_names,
-            "is_admin": is_authenticated(request),
             "filter_type": type,
             "filter_city_id": city_id,
             "filter_province": province,
@@ -589,14 +633,7 @@ async def get_station(request: Request, station_id: int):
     station_dict = station.model_dump()
     station_dict['city_name'] = city_name
     
-    return templates.TemplateResponse(
-        "station.html",
-        {
-            "request": request,
-            "station": station_dict,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "station.html", {"station": station_dict})
 
 
 # Railway Routes - Projects
@@ -641,12 +678,11 @@ async def list_projects(
         project_dict['city_name'] = city_name
         projects_with_names.append(project_dict)
     
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "projects.html",
         {
-            "request": request,
             "projects": projects_with_names,
-            "is_admin": is_authenticated(request),
             "filter_status": status,
         },
     )
@@ -681,41 +717,7 @@ async def get_project(request: Request, project_id: int):
     project_dict['category_name'] = category_name
     project_dict['city_name'] = city_name
     
-    return templates.TemplateResponse(
-        "project.html",
-        {
-            "request": request,
-            "project": project_dict,
-            "is_admin": is_authenticated(request),
-        },
-    )
-
-
-# Railway Routes - Events
-@app.get("/events", response_class=HTMLResponse)
-async def list_events(request: Request, page: int = 1):
-    # Get "Curiosidades" category
-    curiosidades_category = db.get_category_by_slug("curiosidades")
-    category_id = curiosidades_category.id if curiosidades_category else None
-    
-    # Get posts filtered by "Curiosidades" category
-    posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=category_id)
-    pagination = Pagination(page, total_pages, per_page=10)
-    
-    return templates.TemplateResponse(
-        "events.html",
-        {
-            "request": request,
-            "posts": posts,  # Changed from events to posts
-            "pagination": pagination,
-            "is_admin": is_authenticated(request),
-            "category": curiosidades_category,
-        },
-    )
-
-
-# Note: /events/{event_id} route removed - events are now posts with category "Curiosidades"
-# Individual posts can be accessed via /post/{post_id}
+    return render_template(request, "project.html", {"project": project_dict})
 
 
 # Railway Routes - Cities
@@ -746,12 +748,11 @@ async def list_cities(
             all_projects = db.get_projects()
             related_projects = [p for p in all_projects if p.city_id == city.id]
     
-    return templates.TemplateResponse(
+    return render_template(
+        request,
         "cities.html",
         {
-            "request": request,
             "cities": cities,
-            "is_admin": is_authenticated(request),
             "filter_name": name,
             "related_lines": related_lines if name else [],
             "related_stations": related_stations if name else [],
@@ -771,28 +772,14 @@ async def get_city(request: Request, slug: str):
     
     if not city:
         raise HTTPException(status_code=404, detail="City not found")
-    return templates.TemplateResponse(
-        "city.html",
-        {
-            "request": request,
-            "city": city,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "city.html", {"city": city})
 
 
 # Railway Routes - Categories
 @app.get("/categories", response_class=HTMLResponse)
 async def list_categories(request: Request):
     categories = db.get_categories()
-    return templates.TemplateResponse(
-        "categories.html",
-        {
-            "request": request,
-            "categories": categories,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "categories.html", {"categories": categories})
 
 
 @app.get("/categories/{category_id}", response_class=HTMLResponse)
@@ -800,14 +787,7 @@ async def get_category(request: Request, category_id: int):
     category = db.get_category(category_id)
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return templates.TemplateResponse(
-        "category.html",
-        {
-            "request": request,
-            "category": category,
-            "is_admin": is_authenticated(request),
-        },
-    )
+    return render_template(request, "category.html", {"category": category})
 
 
 # Form Routes - Lines
@@ -847,7 +827,7 @@ async def edit_line_form(request: Request, line_id: int):
 @app.post("/admin/lines")
 async def create_line(
     line_number: str = Form(...),
-    description: str = Form(...),
+    description: str = Form(""),
     status: str = Form("active"),
     gauge_type: str = Form(None),
     cities_served: str = Form(""),
@@ -874,7 +854,7 @@ async def create_line(
 async def update_line(
     line_id: int,
     line_number: str = Form(...),
-    description: str = Form(...),
+    description: str = Form(""),
     status: str = Form("active"),
     gauge_type: str = Form(None),
     cities_served: str = Form(""),
@@ -1173,7 +1153,7 @@ async def create_event(
         city_id=city_id,
     )
     event = db.create_event(event_data)
-    return RedirectResponse(url=f"/events/{event.id}", status_code=303)
+    return RedirectResponse(url="/posts/eventos", status_code=303)
 
 
 @app.post("/admin/events/{event_id}")
@@ -1201,7 +1181,7 @@ async def update_event(
     event = db.update_event(event_id, event_data)
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
-    return RedirectResponse(url=f"/events/{event.id}", status_code=303)
+    return RedirectResponse(url="/posts/eventos", status_code=303)
 
 
 @app.post("/admin/events/{event_id}/delete")
@@ -1209,7 +1189,7 @@ async def delete_event(event_id: int):
     success = db.delete_event(event_id)
     if not success:
         raise HTTPException(status_code=404, detail="Event not found")
-    return RedirectResponse(url="/events", status_code=303)
+    return RedirectResponse(url="/posts/eventos", status_code=303)
 
 
 # Form Routes - Cities
