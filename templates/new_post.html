@@ -54,14 +54,14 @@
                             </div>
                             
                             <div class="mb-3">
-                                <label for="category_id" class="form-label">Categoría:</label>
-                                <select class="form-select" id="category_id" name="category_id">
+                                <label for="category" class="form-label">Categoría:</label>
+                                <select class="form-select" id="category" name="category">
                                     <option value="">Seleccionar categoría</option>
-                                    {% for category in categories %}
-                                    <option value="{{ category.id }}">{{ category.name }}</option>
-                                    {% endfor %}
+                                    <option value="noticias">Noticias</option>
+                                    <option value="curiosidades">Curiosidades</option>
+                                    <option value="eventos">Eventos</option>
                                 </select>
-                                <div class="form-text">Selecciona la categoría: Noticias, Curiosidades, Eventos, etc.</div>
+                                <div class="form-text">Selecciona la categoría: Noticias, Curiosidades, Eventos</div>
                             </div>
                             
                             <div class="mb-3">

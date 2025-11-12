@@ -61,12 +61,9 @@ class PostModel(Base):
     content = Column(Text, nullable=False)
     author = Column(String(100), nullable=False)
     is_published = Column(Boolean, default=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
+    category = Column(String(50), nullable=True)  # 'noticias', 'curiosidades', 'eventos'
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-
-    # Relationships
-    category = relationship("CategoryModel", back_populates="posts")
 
 
 # SQLAlchemy Page model
@@ -195,7 +192,7 @@ class CategoryModel(Base):
     # Relationships
     lines = relationship("LineModel", back_populates="category")
     projects = relationship("ProjectModel", back_populates="category")
-    posts = relationship("PostModel", back_populates="category")
+    # Note: posts no longer have a foreign key to categories - they use an enum instead
     parent = relationship("CategoryModel", remote_side=[id], back_populates="children")
     children = relationship("CategoryModel", back_populates="parent")
 
@@ -218,25 +215,31 @@ class BlogDatabase:
     def create_post(self, post_data: PostCreate) -> Post:
         db = self.get_db()
         try:
+            # Convert PostCategory enum to string for database
+            category_str = post_data.category.value if post_data.category else None
+            
             db_post = PostModel(
                 title=post_data.title,
                 content=post_data.content,
                 author=post_data.author,
                 is_published=post_data.is_published,
-                category_id=post_data.category_id,
+                category=category_str,
             )
             db.add(db_post)
             db.commit()
             db.refresh(db_post)
 
             # Convert SQLAlchemy model to Pydantic model
+            from models import PostCategory
+            category_enum = PostCategory(db_post.category) if db_post.category else None
+            
             return Post(
                 id=int(db_post.id),
                 title=str(db_post.title),
                 content=str(db_post.content),
                 author=str(db_post.author),
                 is_published=bool(db_post.is_published),
-                category_id=db_post.category_id,
+                category=category_enum,
                 created_at=db_post.created_at,
                 updated_at=db_post.updated_at,
             )
@@ -246,15 +249,17 @@ class BlogDatabase:
     def get_post(self, post_id: int) -> Optional[Post]:
         db = self.get_db()
         try:
+            from models import PostCategory
             db_post = db.query(PostModel).filter(PostModel.id == post_id).first()
             if db_post:
+                category_enum = PostCategory(db_post.category) if db_post.category else None
                 return Post(
                     id=int(db_post.id),
                     title=str(db_post.title),
                     content=str(db_post.content),
                     author=str(db_post.author),
                     is_published=bool(db_post.is_published),
-                    category_id=db_post.category_id,
+                    category=category_enum,
                     created_at=db_post.created_at,
                     updated_at=db_post.updated_at,
                 )
@@ -262,14 +267,17 @@ class BlogDatabase:
         finally:
             db.close()
 
-    def get_published_posts_paginated(self, page: int = 1, per_page: int = 5, category_id: Optional[int] = None):
+    def get_published_posts_paginated(self, page: int = 1, per_page: int = 5, category: Optional[str] = None):
         """Get paginated published posts with total count, optionally filtered by category"""
         db = self.get_db()
         try:
+            from models import PostCategory
             # Build query
             query = db.query(PostModel).filter(PostModel.is_published == True)
-            if category_id:
-                query = query.filter(PostModel.category_id == category_id)
+            if category:
+                # category can be a string or PostCategory enum
+                category_str = category.value if hasattr(category, 'value') else category.lower()
+                query = query.filter(PostModel.category == category_str)
             
             # Count total published posts
             total_count = query.count()
@@ -292,7 +300,7 @@ class BlogDatabase:
                     content=str(post.content),
                     author=str(post.author),
                     is_published=bool(post.is_published),
-                    category_id=post.category_id,
+                    category=PostCategory(post.category) if post.category else None,
                     created_at=post.created_at,
                     updated_at=post.updated_at,
                 )
@@ -308,15 +316,18 @@ class BlogDatabase:
         skip: int = 0,
         limit: int = 100,
         published_only: bool = True,
-        category_id: Optional[int] = None,
+        category: Optional[str] = None,
     ) -> List[Post]:
         db = self.get_db()
         try:
+            from models import PostCategory
             query = db.query(PostModel)
             if published_only:
                 query = query.filter(PostModel.is_published == True)
-            if category_id:
-                query = query.filter(PostModel.category_id == category_id)
+            if category:
+                # category can be a string or PostCategory enum
+                category_str = category.value if hasattr(category, 'value') else category.lower()
+                query = query.filter(PostModel.category == category_str)
             posts = (
                 query.order_by(desc(PostModel.updated_at), desc(PostModel.created_at))
                 .offset(skip)
@@ -331,7 +342,7 @@ class BlogDatabase:
                     content=str(post.content),
                     author=str(post.author),
                     is_published=bool(post.is_published),
-                    category_id=post.category_id,
+                    category=PostCategory(post.category) if post.category else None,
                     created_at=post.created_at,
                     updated_at=post.updated_at,
                 )
@@ -343,23 +354,29 @@ class BlogDatabase:
     def update_post(self, post_id: int, post_data: PostUpdate) -> Optional[Post]:
         db = self.get_db()
         try:
+            from models import PostCategory
             db_post = db.query(PostModel).filter(PostModel.id == post_id).first()
             if db_post:
                 update_data = post_data.dict(exclude_unset=True)
                 for field, value in update_data.items():
-                    setattr(db_post, field, value)
+                    if field == 'category':
+                        # Convert PostCategory enum to string for database
+                        db_post.category = value.value if value else None
+                    else:
+                        setattr(db_post, field, value)
                 # Update timestamp manually
                 db_post.updated_at = datetime.utcnow()
                 db.commit()
                 db.refresh(db_post)
 
+                category_enum = PostCategory(db_post.category) if db_post.category else None
                 return Post(
                     id=int(db_post.id),
                     title=str(db_post.title),
                     content=str(db_post.content),
                     author=str(db_post.author),
                     is_published=bool(db_post.is_published),
-                    category_id=db_post.category_id,
+                    category=category_enum,
                     created_at=db_post.created_at,
                     updated_at=db_post.updated_at,
                 )
@@ -1443,6 +1460,122 @@ class BlogDatabase:
             ]
 
             return post_list, total_pages
+        finally:
+            db.close()
+
+    def search_all_paginated(self, query: str, page: int = 1, per_page: int = 10):
+        """Get paginated search results across all entities"""
+        db = self.get_db()
+        try:
+            all_results = []
+            
+            # Search in Posts
+            posts = (
+                db.query(PostModel)
+                .filter(
+                    PostModel.is_published == True,
+                    PostModel.title.contains(query) | PostModel.content.contains(query),
+                )
+                .all()
+            )
+            for post in posts:
+                all_results.append({
+                    'type': 'post',
+                    'id': post.id,
+                    'title': post.title,
+                    'description': post.content[:200] if post.content else '',
+                    'url': f'/post/{post.id}',
+                    'author': post.author,
+                    'date': post.created_at,
+                })
+            
+            # Search in Lines
+            lines = (
+                db.query(LineModel)
+                .filter(
+                    LineModel.line_number.contains(query) | 
+                    LineModel.description.contains(query)
+                )
+                .all()
+            )
+            for line in lines:
+                all_results.append({
+                    'type': 'line',
+                    'id': line.id,
+                    'title': f'Línea {line.line_number}',
+                    'description': line.description[:200] if line.description else '',
+                    'url': f'/lines/{line.id}',
+                    'date': line.created_at,
+                })
+            
+            # Search in Stations
+            stations = (
+                db.query(StationModel)
+                .filter(
+                    StationModel.name.contains(query) | 
+                    StationModel.station_code.contains(query) |
+                    StationModel.address.contains(query)
+                )
+                .all()
+            )
+            for station in stations:
+                all_results.append({
+                    'type': 'station',
+                    'id': station.id,
+                    'title': station.name,
+                    'description': f'{station.station_code} - {station.address[:150]}' if station.address else station.station_code,
+                    'url': f'/stations/{station.id}',
+                    'date': station.created_at,
+                })
+            
+            # Search in Projects
+            projects = (
+                db.query(ProjectModel)
+                .filter(
+                    ProjectModel.title.contains(query) | 
+                    ProjectModel.description.contains(query)
+                )
+                .all()
+            )
+            for project in projects:
+                all_results.append({
+                    'type': 'project',
+                    'id': project.id,
+                    'title': project.title,
+                    'description': project.description[:200] if project.description else '',
+                    'url': f'/projects/{project.id}',
+                    'date': project.created_at,
+                })
+            
+            # Search in Cities
+            cities = (
+                db.query(CityModel)
+                .filter(
+                    CityModel.name.contains(query) | 
+                    CityModel.region.contains(query)
+                )
+                .all()
+            )
+            for city in cities:
+                all_results.append({
+                    'type': 'city',
+                    'id': city.id,
+                    'title': city.name,
+                    'description': f'{city.region}, {city.country}' if city.region else city.country,
+                    'url': f'/cities/{city.slug}' if city.slug else f'/cities/{city.id}',
+                    'date': city.created_at,
+                })
+            
+            # Sort by date (most recent first)
+            all_results.sort(key=lambda x: x['date'] if x['date'] else datetime.min, reverse=True)
+            
+            # Paginate
+            total_count = len(all_results)
+            total_pages = (total_count + per_page - 1) // per_page
+            skip = (page - 1) * per_page
+            paginated_results = all_results[skip:skip+per_page]
+            
+            return paginated_results, total_pages
         finally:
             db.close()
 

@@ -28,7 +28,7 @@
             {% endif %}
             {% if is_admin %}
             <span class="edit-link">
-                <a class="post-edit-link" href="/edit/{{ post.id }}">Editar</a>
+                <a class="post-edit-link" href="/admin/posts/{{ post.id }}/edit">Editar</a>
             </span>
             {% endif %}
         </div>
@@ -45,7 +45,7 @@
             </a>
             {% if is_admin %}
             <div class="admin-actions">
-                <a href="/edit/{{ post.id }}" class="btn btn-primary">
+                <a href="/admin/posts/{{ post.id }}/edit" class="btn btn-primary">
                     <i class="fas fa-edit"></i> Editar
                 </a>
                 <form action="/posts/{{ post.id }}/delete" method="post" class="d-inline">

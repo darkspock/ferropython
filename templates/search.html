@@ -1,125 +1,155 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Search Results - My Blog</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-        <div class="container">
-            <a class="navbar-brand" href="/">My Blog</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/">Home</a>
-                    </li>
-                    {% if is_admin %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/new">New Post</a>
-                    </li>
-                    {% endif %}
-                    <li class="nav-item">
-                        <form class="d-flex" action="/search" method="get">
-                            <input class="form-control me-2" type="search" name="q" placeholder="Search posts..." aria-label="Search" value="{{ query }}">
-                            <button class="btn btn-outline-light" type="submit">Search</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
+{% extends "base.html" %}
+
+{% block title %}Resultados de búsqueda: "{{ query }}" - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="search-results-page">
+    <h1 class="page-title">Resultados de búsqueda para "{{ query }}"</h1>
     
-    <main class="container my-4">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="mb-4">Search Results for "{{ query }}"</h1>
-                
-                {% for post in posts %}
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h2 class="card-title">
-                            <a href="/post/{{ post.id }}" class="text-decoration-none">{{ post.title }}</a>
-                        </h2>
-                        <p class="text-muted">By {{ post.author }} on {{ post.created_at.strftime('%B %d, %Y') }}</p>
-                        <div class="card-text">{{ post.content[:200]|safe }}{% if post.content|length > 200 %}...{% endif %}</div>
-                        <div class="d-flex gap-2">
-                            <a href="/post/{{ post.id }}" class="btn btn-primary">Read More</a>
-                            {% if is_admin %}
-                            <a href="/edit/{{ post.id }}" class="btn btn-outline-secondary">Edit</a>
+    {% if results %}
+        <div class="search-results-list">
+            {% for result in results %}
+            <div class="search-result-item card mb-3">
+                <div class="card-body">
+                    <div class="result-header">
+                        <span class="result-type-badge badge 
+                            {% if result.type == 'post' %}bg-primary
+                            {% elif result.type == 'line' %}bg-success
+                            {% elif result.type == 'station' %}bg-info
+                            {% elif result.type == 'project' %}bg-warning
+                            {% elif result.type == 'city' %}bg-secondary
+                            {% endif %}">
+                            {% if result.type == 'post' %}Post
+                            {% elif result.type == 'line' %}Línea
+                            {% elif result.type == 'station' %}Estación
+                            {% elif result.type == 'project' %}Proyecto
+                            {% elif result.type == 'city' %}Ciudad
                             {% endif %}
-                        </div>
+                        </span>
+                        <h2 class="result-title">
+                            <a href="{{ result.url }}" class="text-decoration-none">{{ result.title }}</a>
+                        </h2>
+                    </div>
+                    
+                    {% if result.description %}
+                    <p class="result-description">{{ result.description|safe }}{% if result.description|length > 200 %}...{% endif %}</p>
+                    {% endif %}
+                    
+                    <div class="result-meta">
+                        {% if result.author %}
+                        <span class="text-muted">Por {{ result.author }}</span>
+                        {% endif %}
+                        {% if result.date %}
+                        <span class="text-muted"> - {{ result.date.strftime('%d/%m/%Y') }}</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="result-actions mt-2">
+                        <a href="{{ result.url }}" class="btn btn-sm btn-primary">Ver más</a>
+                        {% if is_admin and result.type == 'post' %}
+                        <a href="/admin/posts/{{ result.id }}/edit" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        {% endif %}
                     </div>
                 </div>
-                {% endfor %}
-                
-                {% if posts|length == 0 %}
-                <div class="text-center py-5">
-                    <h3>No results found</h3>
-                    <p class="text-muted">No posts found matching "{{ query }}". Try different keywords!</p>
-                    <a href="/" class="btn btn-primary">Back to Home</a>
-                </div>
-                {% endif %}
             </div>
+            {% endfor %}
         </div>
         
         <!-- Pagination -->
         {% if pagination.total_pages > 1 %}
-        <nav aria-label="Page navigation" class="mt-4">
-            <ul class="pagination justify-content-center">
+        <nav class="navigation pagination" aria-label="Navegación de resultados">
+            <div class="nav-links">
                 {% if pagination.has_prev %}
-                <li class="page-item">
-                    <a class="page-link" href="?q={{ query }}&page={{ pagination.prev_num }}">Previous</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">Previous</span>
-                </li>
+                <a class="prev page-numbers" href="?q={{ query }}&page={{ pagination.prev_num }}">
+                    <i class="fas fa-angle-left"></i> Anterior
+                </a>
                 {% endif %}
                 
                 {% for page_num in pagination.iter_pages() %}
                     {% if page_num %}
-                        {% if page_num != pagination.page %}
-                        <li class="page-item">
-                            <a class="page-link" href="?q={{ query }}&page={{ page_num }}">{{ page_num }}</a>
-                        </li>
+                        {% if page_num == pagination.page %}
+                        <span class="page-numbers current">{{ page_num }}</span>
                         {% else %}
-                        <li class="page-item active">
-                            <span class="page-link">{{ page_num }}</span>
-                        </li>
+                        <a class="page-numbers" href="?q={{ query }}&page={{ page_num }}">{{ page_num }}</a>
                         {% endif %}
                     {% else %}
-                    <li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>
+                    <span class="page-numbers dots">…</span>
                     {% endif %}
                 {% endfor %}
                 
                 {% if pagination.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?q={{ query }}&page={{ pagination.next_num }}">Next</a>
-                </li>
-                {% else %}
-                <li class="page-item disabled">
-                    <span class="page-link">Next</span>
-                </li>
+                <a class="next page-numbers" href="?q={{ query }}&page={{ pagination.next_num }}">
+                    Siguiente <i class="fas fa-angle-right"></i>
+                </a>
                 {% endif %}
-            </ul>
+            </div>
         </nav>
         {% endif %}
-    </main>
-    
-    <footer class="bg-dark text-white text-center py-3 mt-5">
-        <div class="container">
-            <p>&copy; 2025 My Blog. Built with FastAPI.</p>
+    {% else %}
+        <div class="no-results text-center py-5">
+            <h3>No se encontraron resultados</h3>
+            <p class="text-muted">No se encontraron resultados para "{{ query }}". Intenta con otras palabras clave.</p>
+            <a href="/posts/noticias" class="btn btn-primary">Volver al inicio</a>
         </div>
-    </footer>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.search-results-page {
+    padding: 2rem 0;
+}
+
+.search-result-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.search-result-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.result-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-type-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    flex-shrink: 0;
+}
+
+.result-title {
+    font-size: 1.25rem;
+    margin: 0;
+    flex: 1;
+}
+
+.result-title a {
+    color: var(--primary-color);
+}
+
+.result-title a:hover {
+    color: var(--secondary-color);
+}
+
+.result-description {
+    color: #666;
+    margin-bottom: 0.5rem;
+}
+
+.result-meta {
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+</style>
+{% endblock %}

@@ -3,6 +3,11 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from typing import List, Optional
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 from models import (
     Post,
     PostCreate,
@@ -191,6 +196,25 @@ async def admin_posts(request: Request):
     )
 
 
+@app.get("/admin/posts/{post_id}/edit", response_class=HTMLResponse)
+async def edit_post_form(request: Request, post_id: int):
+    try:
+        post = db.get_post(post_id)
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+        
+        return templates.TemplateResponse(
+            "edit_post.html",
+            {
+                "request": request,
+                "post": post,
+            }
+        )
+    except Exception as e:
+        logger.error(f"ERROR in edit_post_form: {e}", exc_info=True)
+        raise
+
+
 @app.get("/admin/dashboard", response_class=HTMLResponse)
 async def admin_dashboard_main(request: Request):
     try:
@@ -254,13 +278,7 @@ async def admin_dashboard_main(request: Request):
 
 @app.get("/new", response_class=HTMLResponse)
 async def new_post_form(request: Request):
-    # Get all categories, but filter to show only Noticias, Curiosidades, and Eventos for posts
-    all_categories = db.get_categories()
-    # Filter to only show the main post categories (Noticias, Curiosidades, Eventos)
-    post_categories = [cat for cat in all_categories if cat.slug in ['noticias', 'curiosidades', 'eventos']]
-    # If those don't exist, show all categories as fallback
-    categories = post_categories if post_categories else all_categories
-    return templates.TemplateResponse("new_post.html", {"request": request, "categories": categories})
+    return templates.TemplateResponse("new_post.html", {"request": request})
 
 
 @app.post("/posts")
@@ -269,28 +287,22 @@ async def create_post(
     content: str = Form(...),
     author: str = Form(...),
     is_published: bool = Form(True),
-    category_id: Optional[int] = Form(None),
+    category: Optional[str] = Form(None),
 ):
+    # Convert category string to PostCategory enum if provided
+    from models import PostCategory
+    category_enum = None
+    if category:
+        try:
+            category_enum = PostCategory(category.lower())
+        except ValueError:
+            logger.warning(f"Invalid category value: {category}")
+    
     post_data = PostCreate(
-        title=title, content=content, author=author, is_published=is_published, category_id=category_id
+        title=title, content=content, author=author, is_published=is_published, category=category_enum
     )
     post = db.create_post(post_data)
     return RedirectResponse(url=f"/post/{post.id}", status_code=303)
-
-
-@app.get("/edit/{post_id}", response_class=HTMLResponse)
-async def edit_post_form(request: Request, post_id: int):
-    post = db.get_post(post_id)
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-    # Filter to only show the main post categories (Noticias, Curiosidades, Eventos)
-    all_categories = db.get_categories()
-    post_categories = [cat for cat in all_categories if cat.slug in ['noticias', 'curiosidades', 'eventos']]
-    # If those don't exist, show all categories as fallback
-    categories = post_categories if post_categories else all_categories
-    return templates.TemplateResponse(
-        "edit_post.html", {"request": request, "post": post, "categories": categories}
-    )
 
 
 # Posts by Category Route - MUST be before /posts/{post_id} routes
@@ -302,13 +314,13 @@ async def list_posts_by_category(request: Request, category_slug: str, page: int
     if category_slug.isdigit():
         raise HTTPException(status_code=404, detail="Use /post/{post_id} to view individual posts")
     
-    # Get category by slug
+    # Validate category_slug against PostCategory enum
+    from models import PostCategory
     try:
-        category = db.get_category_by_slug(category_slug)
-    except Exception as e:
-        # Log error and show all posts
-        print(f"Error getting category by slug '{category_slug}': {e}")
-        posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=None)
+        category_enum = PostCategory(category_slug.lower())
+    except ValueError:
+        # Invalid category, show all posts with a message
+        posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category=None)
         pagination = Pagination(page, total_pages, per_page=10)
         return render_template(
             request,
@@ -316,31 +328,21 @@ async def list_posts_by_category(request: Request, category_slug: str, page: int
             {
                 "posts": posts,
                 "pagination": pagination,
-                "category_id": None,
-                "category": None,
-                "error_message": f"Error al buscar la categoría '{category_slug}'. Mostrando todos los posts.",
-            },
-        )
-    
-    if not category:
-        # If category doesn't exist, show all posts with a message
-        posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=None)
-        pagination = Pagination(page, total_pages, per_page=10)
-        return render_template(
-            request,
-            "index.html",
-            {
-                "posts": posts,
-                "pagination": pagination,
-                "category_id": None,
                 "category": None,
                 "error_message": f"La categoría '{category_slug}' no existe. Mostrando todos los posts.",
             },
         )
     
     # Get posts filtered by category
-    posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category_id=category.id)
+    posts, total_pages = db.get_published_posts_paginated(page, per_page=10, category=category_enum)
     pagination = Pagination(page, total_pages, per_page=10)
+    
+    # Create a simple category object for the template
+    category_info = {
+        "name": category_enum.value.capitalize(),
+        "slug": category_enum.value,
+        "description": f"Posts de {category_enum.value.capitalize()}"
+    }
     
     # Use index.html template for posts listing
     return render_template(
@@ -349,23 +351,31 @@ async def list_posts_by_category(request: Request, category_slug: str, page: int
         {
             "posts": posts,
             "pagination": pagination,
-            "category_id": category.id,
-            "category": category,
+            "category": category_info,
         },
     )
 
 
-@app.post("/posts/{post_id}")
+@app.post("/admin/posts/{post_id}")
 async def update_post(
     post_id: int,
     title: str = Form(...),
     content: str = Form(...),
     author: str = Form(...),
     is_published: bool = Form(False),
-    category_id: Optional[int] = Form(None),
+    category: Optional[str] = Form(None),
 ):
+    # Convert category string to PostCategory enum if provided
+    from models import PostCategory
+    category_enum = None
+    if category:
+        try:
+            category_enum = PostCategory(category.lower())
+        except ValueError:
+            logger.warning(f"Invalid category value: {category}")
+    
     post_data = PostUpdate(
-        title=title, content=content, author=author, is_published=is_published, category_id=category_id
+        title=title, content=content, author=author, is_published=is_published, category=category_enum
     )
     post = db.update_post(post_id, post_data)
     if not post:
@@ -409,17 +419,17 @@ async def api_update_post(post_id: int, post_data: PostUpdate):
 
 
 @app.get("/search", response_class=HTMLResponse)
-async def search_posts(request: Request, q: str = "", page: int = 1):
+async def search_all(request: Request, q: str = "", page: int = 1):
     if not q.strip():
-        return RedirectResponse(url="/", status_code=303)
+        return RedirectResponse(url="/posts/noticias", status_code=303)
 
-    posts, total_pages = db.search_posts_paginated(q, page, per_page=5)
-    pagination = Pagination(page, total_pages, per_page=5)
+    results, total_pages = db.search_all_paginated(q, page, per_page=10)
+    pagination = Pagination(page, total_pages, per_page=10)
     return render_template(
         request,
         "search.html",
         {
-            "posts": posts,
+            "results": results,
             "query": q,
             "pagination": pagination,
         },
@@ -1431,5 +1441,8 @@ async def admin_list_categories(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-
-    uvicorn.run(app, host="0.0.0.0", port=4444)
+    import os
+    
+    # Use reload only if not in production
+    reload = os.getenv("ENV", "development") == "development"
+    uvicorn.run("main:app", host="0.0.0.0", port=4444, reload=reload)

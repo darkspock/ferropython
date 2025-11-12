@@ -1,6 +1,14 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from datetime import datetime
+from enum import Enum
+
+
+class PostCategory(str, Enum):
+    """Enum para las categorías de posts"""
+    NOTICIAS = "noticias"
+    CURIOSIDADES = "curiosidades"
+    EVENTOS = "eventos"
 
 
 class PostBase(BaseModel):
@@ -8,7 +16,7 @@ class PostBase(BaseModel):
     content: str
     author: str
     is_published: bool = True
-    category_id: Optional[int] = None
+    category: Optional[PostCategory] = None
 
 
 class PostCreate(PostBase):
@@ -20,12 +28,12 @@ class PostUpdate(BaseModel):
     content: Optional[str] = None
     author: Optional[str] = None
     is_published: Optional[bool] = None
-    category_id: Optional[int] = None
+    category: Optional[PostCategory] = None
 
 
 class Post(PostBase):
     id: int
-    category_id: Optional[int] = None
+    category: Optional[PostCategory] = None
     created_at: datetime
     updated_at: datetime
 
@@ -98,11 +106,12 @@ class StationBase(BaseModel):
     station_code: str
     name: str
     address: str
-    services: List[str] = []
-    accessibility: List[str] = []
-    station_type: Optional[str] = None  # 'principal', 'regional', 'local'
+    station_type: Optional[str] = None
     province: Optional[str] = None
     city_id: Optional[int] = None
+    services: List[str] = []
+    accessibility: bool = False
+    category_id: Optional[int] = None
 
 
 class StationCreate(StationBase):
@@ -113,16 +122,17 @@ class StationUpdate(BaseModel):
     station_code: Optional[str] = None
     name: Optional[str] = None
     address: Optional[str] = None
-    services: Optional[List[str]] = None
-    accessibility: Optional[List[str]] = None
     station_type: Optional[str] = None
     province: Optional[str] = None
     city_id: Optional[int] = None
+    services: Optional[List[str]] = None
+    accessibility: Optional[bool] = None
+    category_id: Optional[int] = None
 
 
 class Station(StationBase):
     id: int
-    city_id: Optional[int] = None
+    category_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -135,9 +145,9 @@ class ProjectBase(BaseModel):
     title: str
     description: str
     project_type: str
+    status: str = "planning"
     budget: Optional[float] = None
     timeline: Optional[str] = None
-    status: str = "planning"
     category_id: Optional[int] = None
     city_id: Optional[int] = None
 
@@ -150,9 +160,9 @@ class ProjectUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     project_type: Optional[str] = None
+    status: Optional[str] = None
     budget: Optional[float] = None
     timeline: Optional[str] = None
-    status: Optional[str] = None
     category_id: Optional[int] = None
     city_id: Optional[int] = None
 
@@ -168,15 +178,15 @@ class Project(ProjectBase):
         from_attributes = True
 
 
-# Railway Event Models
+# Event Models
 class EventBase(BaseModel):
     title: str
     description: str
     event_date: datetime
-    event_time: Optional[str] = None
     location: str
-    event_type: str
+    category_id: Optional[int] = None
     city_id: Optional[int] = None
+    line_id: Optional[int] = None
 
 
 class EventCreate(EventBase):
@@ -187,15 +197,17 @@ class EventUpdate(BaseModel):
     title: Optional[str] = None
     description: Optional[str] = None
     event_date: Optional[datetime] = None
-    event_time: Optional[str] = None
     location: Optional[str] = None
-    event_type: Optional[str] = None
+    category_id: Optional[int] = None
     city_id: Optional[int] = None
+    line_id: Optional[int] = None
 
 
 class Event(EventBase):
     id: int
+    category_id: Optional[int] = None
     city_id: Optional[int] = None
+    line_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 
@@ -207,8 +219,8 @@ class Event(EventBase):
 class CityBase(BaseModel):
     name: str
     slug: str
-    region: str
-    country: str = "Spain"
+    region: Optional[str] = None
+    country: str = "España"
 
 
 class CityCreate(CityBase):
@@ -231,7 +243,7 @@ class City(CityBase):
         from_attributes = True
 
 
-# Category Models
+# Category Models (kept for other entities like lines, projects, etc.)
 class CategoryBase(BaseModel):
     name: str
     slug: str
@@ -252,6 +264,7 @@ class CategoryUpdate(BaseModel):
 
 class Category(CategoryBase):
     id: int
+    parent_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
 

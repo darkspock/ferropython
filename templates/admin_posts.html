@@ -51,7 +51,7 @@
                     <td>{{ post.created_at.strftime('%d/%m/%Y') }}</td>
                     <td>
                         <div class="btn-group" role="group">
-                            <a href="/edit/{{ post.id }}" class="btn btn-sm btn-primary" title="Editar">
+                            <a href="/admin/posts/{{ post.id }}/edit" class="btn btn-sm btn-primary" title="Editar">
                                 <i class="fas fa-edit me-1"></i>Editar
                             </a>
                             <a href="/post/{{ post.id }}" class="btn btn-sm btn-outline-secondary" title="Ver">
