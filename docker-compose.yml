@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: blog_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: blog
+      MYSQL_USER: bloguser
+      MYSQL_PASSWORD: blogpass
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - blog_network
+
+  blog:
+    build: .
+    container_name: blog_app
+    ports:
+      - "4444:4444"
+    environment:
+      DATABASE_URL: mysql+pymysql://bloguser:blogpass@mysql:3306/blog
+    depends_on:
+      - mysql
+    networks:
+      - blog_network
+    volumes:
+      - .:/app
+
+volumes:
+  mysql_data:
+
+networks:
+  blog_network:
+    driver: bridge

@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Proyectos Ferroviarios - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="lines-page">
+    <div class="lines-header">
+        <h1>Proyectos Ferroviarios</h1>
+        {% if is_admin %}
+        <a href="/admin/projects/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Nuevo Proyecto
+        </a>
+        {% endif %}
+    </div>
+
+    {% if projects %}
+    <div class="lines-list">
+        {% for project in projects %}
+        <article class="line-card">
+            <div class="line-card-header">
+                <h2 class="line-number">{{ project.title }}</h2>
+                <div class="line-badges">
+                    <span class="badge status-{{ project.status or 'unknown' }}">{{ project.status or 'Estado no especificado' }}</span>
+                    {% if project.project_type %}
+                    <span class="badge gauge-type">
+                        {% if project.project_type == 'nueva_linea' %}Nueva Línea
+                        {% elif project.project_type == 'mejora' %}Mejora
+                        {% elif project.project_type == 'modernizacion' %}Modernización
+                        {% elif project.project_type == 'electrificacion' %}Electrificación
+                        {% elif project.project_type == 'duplicacion' %}Duplicación
+                        {% else %}{{ project.project_type }}
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-body">
+                <p class="line-description">{{ project.description | strip_html or 'Sin descripción disponible' }}</p>
+                <div class="line-details">
+                    {% if project.budget %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-euro-sign"></i>
+                        <span>Presupuesto: {{ "{:,.0f}".format(project.budget|float) }} €</span>
+                    </div>
+                    {% endif %}
+                    {% if project.timeline %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Plazo: {{ project.timeline }}</span>
+                    </div>
+                    {% endif %}
+                    {% if project.city_name %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-city"></i>
+                        <span>Ciudad: {{ project.city_name }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-footer">
+                <a href="/projects/{{ project.id }}" class="btn-view-details">
+                    Ver detalles <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-lines">
+        <i class="fas fa-building"></i>
+        <h3>No hay proyectos registrados</h3>
+        <p>Comienza agregando el primer proyecto ferroviario.</p>
+        {% if is_admin %}
+        <a href="/admin/projects/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Agregar Proyecto
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

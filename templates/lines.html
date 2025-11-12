@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}Líneas Ferroviarias - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="lines-page">
+    <div class="lines-header">
+        <h1>Líneas Ferroviarias</h1>
+        {% if is_admin %}
+        <a href="/admin/lines/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Nueva Línea
+        </a>
+        {% endif %}
+    </div>
+
+    {% if lines %}
+    <div class="lines-list">
+        {% for line in lines %}
+        <article class="line-card">
+            <div class="line-card-header">
+                <h2 class="line-number">{{ line.line_number }}</h2>
+                <div class="line-badges">
+                    <span class="badge status-{{ line.status or 'unknown' }}">{{ line.status or 'Estado no especificado' }}</span>
+                    {% if line.gauge_type %}
+                    <span class="badge gauge-type">{{ line.gauge_type }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-body">
+                <p class="line-description">{{ line.description | strip_html or 'Sin descripción disponible' }}</p>
+                <div class="line-details">
+                    {% if line.cities_served %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-city"></i>
+                        <span>Ciudades servidas: {{ line.cities_served|join(', ') }}</span>
+                    </div>
+                    {% else %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-city"></i>
+                        <span>Ciudades servidas: No especificado</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-footer">
+                <a href="/lines/{{ line.id }}" class="btn-view-details">
+                    Ver detalles <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-lines">
+        <i class="fas fa-train"></i>
+        <h3>No hay líneas registradas</h3>
+        <p>Comienza agregando la primera línea ferroviaria.</p>
+        {% if is_admin %}
+        <a href="/admin/lines/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Agregar Línea
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

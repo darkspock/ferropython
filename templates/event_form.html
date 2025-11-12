@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Editar Evento" if event else "Nuevo Evento" }} - Blog Ferroviario{% endblock %}
+
+{% block content %}
+<div class="form-wrapper mt-4">
+    <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        {{ "Editar Evento" if event else "Nuevo Evento" }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/events{% if event %}/{{ event.id }}{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Título del Evento *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ event.title if event else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="event_type" class="form-label">Tipo de Evento *</label>
+                                <select class="form-select" id="event_type" name="event_type" required>
+                                    <option value="">Seleccionar tipo...</option>
+                                    <option value="inauguracion" {{ 'selected' if event and event.event_type == 'inauguracion' else '' }}>Inauguración</option>
+                                    <option value="accidente" {{ 'selected' if event and event.event_type == 'accidente' else '' }}>Accidente</option>
+                                    <option value="mejora" {{ 'selected' if event and event.event_type == 'mejora' else '' }}>Mejora</option>
+                                    <option value="cierre" {{ 'selected' if event and event.event_type == 'cierre' else '' }}>Cierre</option>
+                                    <option value="historico" {{ 'selected' if event and event.event_type == 'historico' else '' }}>Histórico</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="event_date" class="form-label">Fecha *</label>
+                                <input type="date" class="form-control" id="event_date" name="event_date" 
+                                       value="{{ event.event_date.strftime('%Y-%m-%d') if event else '' }}" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="event_time" class="form-label">Hora</label>
+                                <input type="time" class="form-control" id="event_time" name="event_time" 
+                                       value="{{ event.event_time if event else '' }}">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="location" class="form-label">Ubicación *</label>
+                                <input type="text" class="form-control" id="location" name="location" 
+                                       value="{{ event.location if event else '' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="description" name="description" rows="8">{{ event.description if event else '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('list_events') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Evento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+tinymce.init({
+    selector: 'textarea',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+});
+
+// Sync TinyMCE content before form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    tinymce.triggerSave();
+    // Validate description field
+    const description = document.getElementById('description');
+    if (description && !description.value.trim()) {
+        e.preventDefault();
+        alert('Por favor, complete el campo Descripción');
+        tinymce.get('description').focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

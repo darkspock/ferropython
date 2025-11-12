@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Ciudades - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="lines-page">
+    <div class="lines-header">
+        <h1>Ciudades</h1>
+        {% if is_admin %}
+        <a href="/admin/cities/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Nueva Ciudad
+        </a>
+        {% endif %}
+    </div>
+
+    {% if cities %}
+    <div class="lines-list">
+        {% for city in cities %}
+        <article class="line-card">
+            <div class="line-card-header">
+                <h2 class="line-number">{{ city.name }}</h2>
+                <div class="line-badges">
+                    {% if city.region %}
+                    <span class="badge status-unknown">{{ city.region }}</span>
+                    {% endif %}
+                    {% if city.country %}
+                    <span class="badge gauge-type">{{ city.country }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-body">
+                <div class="line-details">
+                    {% if city.region %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>Región: {{ city.region }}</span>
+                    </div>
+                    {% endif %}
+                    {% if city.country %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-flag"></i>
+                        <span>País: {{ city.country }}</span>
+                    </div>
+                    {% endif %}
+                    {% if city.slug %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-tag"></i>
+                        <span>Slug: {{ city.slug }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-footer">
+                <a href="/cities/{{ city.slug }}" class="btn-view-details">
+                    Ver detalles <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-lines">
+        <i class="fas fa-city"></i>
+        <h3>No hay ciudades registradas</h3>
+        <p>Comienza agregando la primera ciudad.</p>
+        {% if is_admin %}
+        <a href="/admin/cities/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Agregar Ciudad
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

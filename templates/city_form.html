@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Editar Ciudad" if city else "Nueva Ciudad" }} - Blog Ferroviario{% endblock %}
+
+{% block content %}
+<div class="form-wrapper mt-4">
+    <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-city"></i> 
+                        {{ "Editar Ciudad" if city else "Nueva Ciudad" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/cities{% if city %}/{{ city.id }}{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Nombre de la Ciudad *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ city.name if city else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="slug" class="form-label">Slug (URL amigable) *</label>
+                                <input type="text" class="form-control" id="slug" name="slug" 
+                                       value="{{ city.slug if city else '' }}" required>
+                                <div class="form-text">Usado en URLs. Ej: madrid</div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="region" class="form-label">Región/Estado</label>
+                                <input type="text" class="form-control" id="region" name="region" 
+                                       value="{{ city.region if city else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="country" class="form-label">País *</label>
+                                <input type="text" class="form-control" id="country" name="country" 
+                                       value="{{ city.country if city else 'Spain' }}" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/cities" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {{ "Actualizar" if city else "Guardar" }} Ciudad
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+</div>
+{% endblock %}

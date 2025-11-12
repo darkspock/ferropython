@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+                    <li class="breadcrumb-item"><a href="/events">Eventos</a></li>
+                    <li class="breadcrumb-item active">{{ event.title }}</li>
+                </ol>
+            </nav>
+
+            <!-- Event Details Card -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-calendar-event"></i> 
+                        {{ event.title }}
+                    </h3>
+                    <div>
+                        <span class="badge bg-info">{{ event.event_type or 'Tipo no especificado' }}</span>
+                        {% if is_admin %}
+                        <div class="btn-group ms-2" role="group">
+                            <a href="/admin/events/{{ event.id }}/edit" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-pencil"></i> Editar
+                            </a>
+                            <a href="/admin/events/{{ event.id }}/delete" class="btn btn-outline-danger btn-sm" 
+                               onclick="return confirm('¿Estás seguro de que quieres eliminar este evento?')">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Descripción</h5>
+                            <div class="card-text">{{ event.description | safe }}</div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Información del Evento</h6>
+                                    
+                                    <p><strong>Fecha:</strong> 
+                                        {% if event.event_date %}
+                                            {{ event.event_date.strftime('%d/%m/%Y') }}
+                                        {% else %}
+                                            Fecha no especificada
+                                        {% endif %}
+                                    </p>
+                                    
+                                    {% if event.event_time %}
+                                    <p><strong>Hora:</strong> {{ event.event_time }}</p>
+                                    {% endif %}
+                                    
+                                    <p><strong>Ubicación:</strong> {{ event.location }}</p>
+                                    
+                                    <p><strong>Tipo:</strong> 
+                                        {% if event.event_type == 'inauguracion' %}Inauguración
+                                        {% elif event.event_type == 'accidente' %}Accidente
+                                        {% elif event.event_type == 'mejora' %}Mejora
+                                        {% elif event.event_type == 'cierre' %}Cierre
+                                        {% elif event.event_type == 'historico' %}Histórico
+                                        {% else %}{{ event.event_type }}
+                                        {% endif %}
+                                    </p>
+                                    
+                                    {% if event.city_name %}
+                                    <p><strong>Ciudad:</strong> {{ event.city_name }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-muted">
+                    <small>
+                        Creado: {{ event.created_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% if event.updated_at != event.created_at %}
+                        | Actualizado: {{ event.updated_at.strftime('%d/%m/%Y %H:%M') }}
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

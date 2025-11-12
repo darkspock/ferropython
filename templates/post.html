@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - Ferrocarril Esp{% endblock %}
+
+{% block sidebar %}{% endblock %}
+
+{% block content %}
+<article id="post-{{ post.id }}" class="post-{{ post.id }} post type-post status-publish format-standard hentry">
+    <header class="entry-header">
+        <h1 class="entry-title">{{ post.title }}</h1>
+        <div class="entry-meta">
+            <span class="posted-on">
+                Publicado el <time class="entry-date published" datetime="{{ post.created_at.isoformat() }}">
+                    {{ post.created_at.strftime('%d de %B de %Y') }}
+                </time>
+            </span>
+            <span class="byline">
+                por <span class="author vcard">
+                    <a class="url fn n" href="#">{{ post.author }}</a>
+                </span>
+            </span>
+            {% if post.updated_at != post.created_at %}
+            <span class="updated-on">
+                Actualizado el <time class="updated" datetime="{{ post.updated_at.isoformat() }}">
+                    {{ post.updated_at.strftime('%d de %B de %Y') }}
+                </time>
+            </span>
+            {% endif %}
+            {% if is_admin %}
+            <span class="edit-link">
+                <a class="post-edit-link" href="/edit/{{ post.id }}">Editar</a>
+            </span>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="entry-content">
+        {{ post.content|safe }}
+    </div>
+
+    <footer class="entry-footer">
+        <div class="entry-actions">
+            <a href="/" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al inicio
+            </a>
+            {% if is_admin %}
+            <div class="admin-actions">
+                <a href="/edit/{{ post.id }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar
+                </a>
+                <form action="/posts/{{ post.id }}/delete" method="post" class="d-inline">
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar esta publicación?')">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </footer>
+</article>
+
+<!-- Comments Section -->
+<div id="comments" class="comments-area">
+    <h2 class="comments-title">
+        Deja un comentario
+    </h2>
+    
+    <div class="comment-respond">
+        <p class="must-log-in">
+            Los comentarios están deshabilitados temporalmente.
+        </p>
+    </div>
+</div>
+
+<!-- Related Posts -->
+<nav class="navigation post-navigation" role="navigation">
+    <h2 class="screen-reader-text">Navegación de publicaciones</h2>
+    <div class="nav-links">
+        <div class="nav-previous">
+            <a href="#" rel="prev">
+                <span class="meta-nav" aria-hidden="true">Anterior</span>
+                <span class="screen-reader-text">Publicación anterior:</span>
+                <span class="post-title">Publicación anterior</span>
+            </a>
+        </div>
+        <div class="nav-next">
+            <a href="#" rel="next">
+                <span class="meta-nav" aria-hidden="true">Siguiente</span>
+                <span class="screen-reader-text">Siguiente publicación:</span>
+                <span class="post-title">Siguiente publicación</span>
+            </a>
+        </div>
+    </div>
+</nav>
+{% endblock %}

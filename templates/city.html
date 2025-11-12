@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}{{ city.name }} - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="line-detail-page mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/cities">Ciudades</a></li>
+            <li class="breadcrumb-item active">{{ city.name }}</li>
+        </ol>
+    </nav>
+
+    <!-- City Details Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-city"></i> 
+                {{ city.name }}
+            </h3>
+            <div class="card-header-actions">
+                {% if city.region %}
+                <span class="badge status-badge">{{ city.region }}</span>
+                {% endif %}
+                {% if is_admin %}
+                <div class="btn-group" role="group">
+                    <a href="/admin/cities/{{ city.id }}/edit" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <form method="POST" action="/admin/cities/{{ city.id }}/delete" 
+                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta ciudad?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-12">
+                    <h5>Información de la Ciudad</h5>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Nombre:</strong></span>
+                            <span>{{ city.name }}</span>
+                        </li>
+                        {% if city.slug %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Slug:</strong></span>
+                            <span>{{ city.slug }}</span>
+                        </li>
+                        {% endif %}
+                        {% if city.region %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>Región:</strong></span>
+                            <span>{{ city.region }}</span>
+                        </li>
+                        {% endif %}
+                        {% if city.country %}
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span><strong>País:</strong></span>
+                            <span>{{ city.country }}</span>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+            
+            <hr class="my-4">
+            
+            <div class="row">
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-clock"></i>
+                            Creada: {{ city.created_at.strftime('%d de %B de %Y') if city.created_at else 'Fecha no disponible' }}
+                            {% if city.updated_at and city.updated_at != city.created_at %}
+                            | Actualizada: {{ city.updated_at.strftime('%d de %B de %Y') }}
+                            {% endif %}
+                        </small>
+                        <a href="/cities" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver a Ciudades
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

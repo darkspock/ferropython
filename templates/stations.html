@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Estaciones Ferroviarias - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="lines-page">
+    <div class="lines-header">
+        <h1>Estaciones Ferroviarias</h1>
+        {% if is_admin %}
+        <a href="/admin/stations/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Nueva Estación
+        </a>
+        {% endif %}
+    </div>
+
+    {% if stations %}
+    <div class="lines-list">
+        {% for station in stations %}
+        <article class="line-card">
+            <div class="line-card-header">
+                <h2 class="line-number">{{ station.name }}</h2>
+                <div class="line-badges">
+                    {% if station.station_type %}
+                    <span class="badge gauge-type">
+                        {% if station.station_type == 'principal' %}Principal
+                        {% elif station.station_type == 'regional' %}Regional
+                        {% elif station.station_type == 'local' %}Local
+                        {% else %}{{ station.station_type }}
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                    {% if station.province %}
+                    <span class="badge status-{{ station.station_type or 'unknown' }}">{{ station.province }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-body">
+                <p class="line-description">{{ station.address or 'Sin dirección disponible' }}</p>
+                <div class="line-details">
+                    {% if station.station_code %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-tag"></i>
+                        <span>Código: {{ station.station_code }}</span>
+                    </div>
+                    {% endif %}
+                    {% if station.city_name %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-city"></i>
+                        <span>Ciudad: {{ station.city_name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if station.services and station.services|length > 0 %}
+                    <div class="line-detail-item">
+                        <i class="fas fa-list"></i>
+                        <span>Servicios: {{ station.services|join(', ') }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-footer">
+                <a href="/stations/{{ station.id }}" class="btn-view-details">
+                    Ver detalles <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-lines">
+        <i class="fas fa-building"></i>
+        <h3>No hay estaciones registradas</h3>
+        <p>Comienza agregando la primera estación ferroviaria.</p>
+        {% if is_admin %}
+        <a href="/admin/stations/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Agregar Estación
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,28 @@
+<svg width="200" height="60" viewBox="0 0 200 60" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="trainGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#1e3a8a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3b82f6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Train Icon -->
+  <g transform="translate(10, 15)">
+    <!-- Train Body -->
+    <rect x="0" y="10" width="30" height="20" rx="2" fill="url(#trainGradient)"/>
+    <!-- Train Front -->
+    <rect x="25" y="15" width="8" height="10" rx="1" fill="#1e3a8a"/>
+    <!-- Windows -->
+    <rect x="3" y="13" width="6" height="4" rx="1" fill="#60a5fa"/>
+    <rect x="11" y="13" width="6" height="4" rx="1" fill="#60a5fa"/>
+    <rect x="19" y="13" width="6" height="4" rx="1" fill="#60a5fa"/>
+    <!-- Wheels -->
+    <circle cx="7" cy="32" r="2" fill="#1f2937"/>
+    <circle cx="15" cy="32" r="2" fill="#1f2937"/>
+    <circle cx="23" cy="32" r="2" fill="#1f2937"/>
+  </g>
+  
+  <!-- Text -->
+  <text x="50" y="25" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="#1e3a8a">Ferrocarril</text>
+  <text x="50" y="42" font-family="Arial, sans-serif" font-size="14" fill="#3b82f6">Esp</text>
+</svg>

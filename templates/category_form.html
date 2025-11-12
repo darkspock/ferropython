@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Editar Categoría" if category else "Nueva Categoría" }} - Blog Ferroviario{% endblock %}
+
+{% block content %}
+<div class="form-wrapper mt-4">
+    <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-tags me-2"></i>
+                        {{ "Editar Categoría" if category else "Nueva Categoría" }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/categories{% if category %}/{{ category.id }}{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="name" class="form-label">Nombre de la Categoría *</label>
+                                <input type="text" class="form-control" id="name" name="name" 
+                                       value="{{ category.name if category else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="slug" class="form-label">Slug (URL amigable) *</label>
+                                <input type="text" class="form-control" id="slug" name="slug" 
+                                       value="{{ category.slug if category else '' }}" required>
+                                <div class="form-text">Usado en URLs. Ej: lineas-ave</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="parent_id" class="form-label">Categoría Padre</label>
+                            <select class="form-select" id="parent_id" name="parent_id">
+                                <option value="">Sin categoría padre</option>
+                                {% for cat in categorias %}
+                                <option value="{{ cat.id }}" {{ 'selected' if category and category.parent_id == cat.id else '' }}>
+                                    {{ cat.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="form-text">Opcional. Para crear subcategorías.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ category.description if category else '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('categorias') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Categoría
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+tinymce.init({
+    selector: 'textarea',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+});
+
+// Sync TinyMCE content before form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    tinymce.triggerSave();
+});
+</script>
+{% endblock %}

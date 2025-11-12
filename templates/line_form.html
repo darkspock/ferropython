@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Editar" if line else "Nueva" }} Línea - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="form-wrapper mt-4">
+    <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-train-front"></i> 
+                        {{ "Editar Línea" if line else "Nueva Línea" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/lines{% if line %}/{{ line.id }}{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="line_number" class="form-label">Número de Línea *</label>
+                                <input type="text" class="form-control" id="line_number" name="line_number" 
+                                       value="{{ line.line_number if line else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="status" class="form-label">Estado *</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="">Seleccionar estado...</option>
+                                    <option value="active" {{ 'selected' if line and line.status == 'active' else '' }}>Activa</option>
+                                    <option value="inactive" {{ 'selected' if line and line.status == 'inactive' else '' }}>Inactiva</option>
+                                    <option value="construction" {{ 'selected' if line and line.status == 'construction' else '' }}>En Construcción</option>
+                                    <option value="planned" {{ 'selected' if line and line.status == 'planned' else '' }}>Planificada</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="cities_served" class="form-label">Ciudades Servidas</label>
+                            <input type="text" class="form-control" id="cities_served" name="cities_served" 
+                                   value="{{ line.cities_served | join(', ') if line else '' }}" 
+                                   placeholder="Ej: Madrid, Barcelona, Valencia">
+                            <div class="form-text">Separar las ciudades con comas.</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="gauge_type" class="form-label">Tipo de Ancho</label>
+                                <select class="form-select" id="gauge_type" name="gauge_type">
+                                    <option value="">Seleccionar tipo de ancho</option>
+                                    <option value="iberico" {{ 'selected' if line and line.gauge_type == 'iberico' else '' }}>Ancho Ibérico</option>
+                                    <option value="metrico" {{ 'selected' if line and line.gauge_type == 'metrico' else '' }}>Ancho Métrico</option>
+                                    <option value="internacional" {{ 'selected' if line and line.gauge_type == 'internacional' else '' }}>Ancho Internacional</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="origin" class="form-label">Origen</label>
+                                <input type="text" class="form-control" id="origin" name="origin" 
+                                       value="{{ line.origin if line else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="destination" class="form-label">Destino</label>
+                                <input type="text" class="form-control" id="destination" name="destination" 
+                                       value="{{ line.destination if line else '' }}">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="length" class="form-label">Longitud (km)</label>
+                                <input type="number" step="0.1" class="form-control" id="length" name="length" 
+                                       value="{{ line.length if line else '' }}">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="category_id" class="form-label">Categoría</label>
+                                <select class="form-select" id="category_id" name="category_id">
+                                    <option value="">Seleccionar categoría</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {{ 'selected' if line and line.category_id == category.id else '' }}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ line.description if line else '' }}</textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/lines" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> 
+                                {{ "Actualizar" if line else "Guardar" }} Línea
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+tinymce.init({
+    selector: 'textarea',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+});
+
+// Sync TinyMCE content before form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    tinymce.triggerSave();
+    // Validate description field
+    const description = document.getElementById('description').value.trim();
+    if (!description) {
+        e.preventDefault();
+        alert('Por favor, complete el campo Descripción');
+        tinymce.get('description').focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

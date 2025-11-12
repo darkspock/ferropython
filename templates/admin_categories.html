@@ -1,0 +1,358 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Admin - Categorías{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <h1>Categorías</h1>
+    <div class="admin-actions">
+        <button class="btn btn-primary" onclick="openAddCategoryModal()">
+            <i class="fas fa-plus"></i> Nueva Categoría
+        </button>
+    </div>
+</div>
+
+<div class="admin-content">
+    {% if categories %}
+    <div class="admin-table-container">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Descripción</th>
+                    <th>Color</th>
+                    <th>Fecha Creación</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>{{ category.id }}</td>
+                    <td>
+                        <span class="category-badge" style="background-color: {{ category.color or '#6c757d' }}">
+                            {{ category.name }}
+                        </span>
+                    </td>
+                    <td>{{ category.description or '-' }}</td>
+                    <td>
+                        {% if category.color %}
+                        <span class="color-preview" style="background-color: {{ category.color }};"></span>
+                        {{ category.color }}
+                        {% else %}
+                        -
+                        {% endif %}
+                    </td>
+                    <td>{{ category.created_at.strftime('%d/%m/%Y') if category.created_at else '-' }}</td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn btn-sm btn-outline-primary" onclick="editCategory({{ category.id }})" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="deleteCategory({{ category.id }})" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-tags"></i>
+        <h3>No hay categorías</h3>
+        <p>No se encontraron categorías en la base de datos.</p>
+        <button class="btn btn-primary" onclick="openAddCategoryModal()">
+            <i class="fas fa-plus"></i> Crear Primera Categoría
+        </button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add/Edit Category Modal -->
+<div id="categoryModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">Nueva Categoría</h3>
+            <button class="modal-close" onclick="closeCategoryModal()">&times;</button>
+        </div>
+        <form id="categoryForm" onsubmit="saveCategory(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="categoryName">Nombre *</label>
+                    <input type="text" id="categoryName" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="categoryDescription">Descripción</label>
+                    <textarea id="categoryDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="categoryColor">Color</label>
+                    <div class="color-input-group">
+                        <input type="color" id="categoryColor" name="color" value="#6c757d">
+                        <input type="text" id="colorHex" name="color_hex" value="#6c757d" pattern="^#[0-9A-Fa-f]{6}$">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeCategoryModal()">Cancelar</button>
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.category-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    color: white;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.color-preview {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border-radius: 0.25rem;
+    border: 1px solid #dee2e6;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+}
+
+.color-input-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-input-group input[type="color"] {
+    width: 50px;
+    height: 38px;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.color-input-group input[type="text"] {
+    flex: 1;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+}
+
+.modal-content {
+    position: relative;
+    background-color: white;
+    margin: 5% auto;
+    padding: 0;
+    border-radius: 0.5rem;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6c757d;
+}
+
+.modal-close:hover {
+    color: #000;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+</style>
+
+<script>
+let currentCategoryId = null;
+
+function openAddCategoryModal() {
+    currentCategoryId = null;
+    document.getElementById('modalTitle').textContent = 'Nueva Categoría';
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryColor').value = '#6c757d';
+    document.getElementById('colorHex').value = '#6c757d';
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+function editCategory(id) {
+    currentCategoryId = id;
+    document.getElementById('modalTitle').textContent = 'Editar Categoría';
+    
+    // In a real implementation, you would fetch the category data
+    // For now, we'll just show the modal with empty fields
+    document.getElementById('categoryForm').reset();
+    document.getElementById('categoryModal').style.display = 'block';
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').style.display = 'none';
+    currentCategoryId = null;
+}
+
+function saveCategory(event) {
+    event.preventDefault();
+    
+    // Sync TinyMCE content before form submission
+    if (tinymce.get('categoryDescription')) {
+        tinymce.triggerSave();
+    }
+    
+    const formData = new FormData(event.target);
+    const categoryData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        color: formData.get('color')
+    };
+    
+    // In a real implementation, you would send this data to the server
+    console.log('Saving category:', categoryData);
+    
+    // Show success message
+    alert('Categoría guardada exitosamente');
+    
+    // Close modal and reload page
+    closeCategoryModal();
+    window.location.reload();
+}
+
+function deleteCategory(id) {
+    if (confirm('¿Está seguro de que desea eliminar esta categoría?')) {
+        // In a real implementation, you would send a delete request to the server
+        console.log('Deleting category:', id);
+        
+        // Show success message
+        alert('Categoría eliminada exitosamente');
+        
+        // Reload page
+        window.location.reload();
+    }
+}
+
+// Sync color inputs
+document.getElementById('categoryColor').addEventListener('input', function(e) {
+    document.getElementById('colorHex').value = e.target.value;
+});
+
+document.getElementById('colorHex').addEventListener('input', function(e) {
+    if (/^#[0-9A-Fa-f]{6}$/.test(e.target.value)) {
+        document.getElementById('categoryColor').value = e.target.value;
+    }
+});
+
+// Initialize TinyMCE for modal textarea
+function initializeTinyMCE() {
+    tinymce.init({
+        selector: '#categoryDescription',
+        plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+        toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        height: 200,
+        menubar: false,
+        statusbar: false
+    });
+}
+
+// Close modal when clicking outside
+window.addEventListener('click', function(event) {
+    const modal = document.getElementById('categoryModal');
+    if (event.target === modal) {
+        closeCategoryModal();
+    }
+});
+
+// Initialize TinyMCE when modal opens
+const originalOpenAddCategoryModal = openAddCategoryModal;
+openAddCategoryModal = function() {
+    originalOpenAddCategoryModal();
+    setTimeout(() => {
+        if (!tinymce.get('categoryDescription')) {
+            initializeTinyMCE();
+        }
+    }, 100);
+};
+
+const originalEditCategory = editCategory;
+editCategory = function(id) {
+    originalEditCategory(id);
+    setTimeout(() => {
+        if (!tinymce.get('categoryDescription')) {
+            initializeTinyMCE();
+        }
+    }, 100);
+};
+
+// Clean up TinyMCE instance when modal closes
+const originalCloseCategoryModal = closeCategoryModal;
+closeCategoryModal = function() {
+    if (tinymce.get('categoryDescription')) {
+        tinymce.remove('#categoryDescription');
+    }
+    originalCloseCategoryModal();
+};
+</script>
+{% endblock %}

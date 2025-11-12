@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Post - My Blog</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tiny.cloud/1/ekwdtnjwdh2wcjuek16wwveuzh7h75ihxvu4yr133l46jbwl/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="/">My Blog</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/new">New Post</a>
+                    </li>
+                    <li class="nav-item">
+                        <form class="d-flex" action="/search" method="get">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Search posts..." aria-label="Search">
+                            <button class="btn btn-outline-light" type="submit">Search</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <main class="container my-4">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="mb-0">Create New Post</h2>
+                    </div>
+                    <div class="card-body">
+                        <form action="/posts" method="post">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title:</label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="author" class="form-label">Author:</label>
+                                <input type="text" class="form-control" id="author" name="author" required>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="category_id" class="form-label">Categoría:</label>
+                                <select class="form-select" id="category_id" name="category_id">
+                                    <option value="">Seleccionar categoría</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="form-text">Selecciona la categoría: Noticias, Curiosidades, Eventos, etc.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="content" class="form-label">Content:</label>
+                                <textarea class="form-control" id="content" name="content" rows="15"></textarea>
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="is_published" name="is_published" checked>
+                                <label class="form-check-label" for="is_published">
+                                    Published (visible to public)
+                                </label>
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Create Post</button>
+                                <a href="/" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p>&copy; 2025 My Blog. Built with FastAPI.</p>
+        </div>
+    </footer>
+    
+    <script>
+        tinymce.init({
+            selector: 'textarea',
+            plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+            toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+        });
+
+        // Handle form submission to ensure TinyMCE content is saved
+        document.querySelector('form').addEventListener('submit', function(e) {
+            tinymce.triggerSave();
+            // Validate content field
+            const content = document.getElementById('content').value.trim();
+            if (!content) {
+                e.preventDefault();
+                alert('Por favor, complete el campo Contenido');
+                tinymce.get('content').focus();
+                return false;
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

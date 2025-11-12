@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}{{ "Editar" if project else "Nuevo" }} Proyecto - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="form-wrapper mt-4">
+    <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-building"></i> 
+                        {{ "Editar Proyecto" if project else "Nuevo Proyecto" }}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="/admin/projects{% if project %}/{{ project.id }}{% endif %}">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="title" class="form-label">Título del Proyecto *</label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ project.title if project else '' }}" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="project_type" class="form-label">Tipo de Proyecto *</label>
+                                <select class="form-select" id="project_type" name="project_type" required>
+                                    <option value="">Seleccionar tipo...</option>
+                                    <option value="nueva_linea" {{ 'selected' if project and project.project_type == 'nueva_linea' else '' }}>Nueva Línea</option>
+                                    <option value="mejora" {{ 'selected' if project and project.project_type == 'mejora' else '' }}>Mejora de Infraestructura</option>
+                                    <option value="modernizacion" {{ 'selected' if project and project.project_type == 'modernizacion' else '' }}>Modernización</option>
+                                    <option value="electrificacion" {{ 'selected' if project and project.project_type == 'electrificacion' else '' }}>Electrificación</option>
+                                    <option value="duplicacion" {{ 'selected' if project and project.project_type == 'duplicacion' else '' }}>Duplicación de Vía</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label for="status" class="form-label">Estado *</label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="">Seleccionar estado...</option>
+                                    <option value="planning" {{ 'selected' if project and project.status == 'planning' else '' }}>Planificación</option>
+                                    <option value="construction" {{ 'selected' if project and project.status == 'construction' else '' }}>Construcción</option>
+                                    <option value="completed" {{ 'selected' if project and project.status == 'completed' else '' }}>Finalizado</option>
+                                    <option value="suspended" {{ 'selected' if project and project.status == 'suspended' else '' }}>Suspendido</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="budget" class="form-label">Presupuesto (€)</label>
+                                <input type="number" step="0.01" class="form-control" id="budget" name="budget" 
+                                       value="{{ project.budget if project else '' }}" min="0">
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label for="timeline" class="form-label">Plazo</label>
+                                <input type="text" class="form-control" id="timeline" name="timeline" 
+                                       value="{{ project.timeline if project else '' }}" 
+                                       placeholder="Ej: 2024-2026">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Descripción *</label>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ project.description if project else '' }}</textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category_id" class="form-label">Categoría</label>
+                                <select class="form-select" id="category_id" name="category_id">
+                                    <option value="">Seleccionar categoría</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" {{ 'selected' if project and project.category_id == category.id else '' }}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="city_id" class="form-label">Ciudad</label>
+                                <select class="form-select" id="city_id" name="city_id">
+                                    <option value="">Seleccionar ciudad</option>
+                                    {% for city in cities %}
+                                    <option value="{{ city.id }}" {{ 'selected' if project and project.city_id == city.id else '' }}>
+                                        {{ city.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/projects" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> 
+                                {{ "Actualizar" if project else "Guardar" }} Proyecto
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+tinymce.init({
+    selector: 'textarea',
+    plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount',
+    toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table | align lineheight | numlist bullist indent outdent | emoticons charmap | removeformat',
+});
+
+// Sync TinyMCE content before form submission
+document.querySelector('form').addEventListener('submit', function(e) {
+    tinymce.triggerSave();
+    // Validate description field
+    const description = document.getElementById('description').value.trim();
+    if (!description) {
+        e.preventDefault();
+        alert('Por favor, complete el campo Descripción');
+        tinymce.get('description').focus();
+        return false;
+    }
+});
+</script>
+{% endblock %}

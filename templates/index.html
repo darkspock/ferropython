@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block title %}Ferrocarril Esp - Blog{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Layout Configuration - Adjust based on image analysis */
+.site-content .container {
+    grid-template-columns: 2fr 1fr; /* Change to 1fr 2fr for left sidebar */
+}
+
+.posts-container {
+    /* Options: posts-list, posts-grid, posts-cards */
+}
+
+/* Uncomment desired layout: */
+/*
+.posts-container.posts-list .post {
+    display: flex;
+    gap: 1.5rem;
+    align-items: flex-start;
+}
+
+.posts-container.posts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.posts-container.posts-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+*/
+</style>
+{% endblock %}
+
+{% block hero %}{% endblock %}
+
+{% block content %}
+<section id="inicio" class="section">
+    <h2>Ferrocarril Esp</h2>
+    <p>El blog del ferrocarril en España</p>
+    
+    <div class="secciones-overview">
+        <h3>Secciones del Blog</h3>
+        <div class="secciones-grid">
+            <div class="seccion-card">
+                <h4>🚆 Líneas</h4>
+                <ul>
+                    <li><a href="/lines?type=iberico">Ancho ibérico</a></li>
+                    <li><a href="/lines?type=metrico">Ancho métrico</a></li>
+                    <li><a href="/lines?type=internacional">Ancho internacional</a></li>
+                    <li><a href="/lines">Distintos tipos de líneas</a></li>
+                    <li><a href="/lines?status=cerrada">Líneas Cerradas</a></li>
+                </ul>
+            </div>
+
+            <div class="seccion-card">
+                <h4>📋 Proyectos</h4>
+                <ul>
+                    <li><a href="/projects?status=cancelado">Proyectos cancelados</a></li>
+                    <li><a href="/projects?status=actual">Proyectos actuales</a></li>
+                    <li><a href="/projects?status=en-marcha">Proyectos en marcha</a></li>
+                    <li><a href="/projects?status=en-estudio">Proyectos en estudio</a></li>
+                </ul>
+            </div>
+
+            <div class="seccion-card">
+                <h4>🏙️ Desarrollo ciudades</h4>
+                <ul>
+                    <li><a href="/cities?name=Bilbao">Bilbao</a></li>
+                    <li><a href="/cities?name=Sevilla">Sevilla</a></li>
+                    <li><a href="/cities?name=A Coruña">A Coruña</a></li>
+                    <li><a href="/cities?name=Valencia">Valencia</a></li>
+                    <li><a href="/cities?name=Madrid">Madrid</a></li>
+                    <li><a href="/cities?name=Barcelona">Barcelona</a></li>
+                    <li style="border: none !important; border-bottom: none !important; list-style: none;">
+                        <a href="/cities" style="color: #888 !important; font-size: 0.9em; text-decoration: none; border: none !important; padding: 0 !important; display: inline !important;">Ver más ciudades...</a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="seccion-card">
+                <h4>🚉 Estaciones de tren</h4>
+                <ul>
+                    <li><a href="/stations">Mapa por provincias</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="latest-posts">
+        <h3>Últimas Noticias</h3>
+        <div id="news-container">
+            {% if posts|length > 0 %}
+                {% for post in posts[:5] %}
+                <div class="post">
+                    <h4><a href="/post/{{ post.id }}">{{ post.title }}</a></h4>
+                    <div class="post-meta">
+                        <span>📅 {{ post.created_at.strftime('%d de %B de %Y') }}</span> |
+                        <span>👤 {{ post.author }}</span>
+                    </div>
+                    <p>{{ post.content[:150]|strip_html }}{% if post.content|length > 150 %}...{% endif %}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p>No hay noticias disponibles en este momento.</p>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- Comments Section -->
+<section class="comments-section">
+    <h3>Comentarios</h3>
+    <div class="comment-form">
+        <div class="form-row">
+            <input type="text" id="commentName" placeholder="Tu nombre" class="comment-input">
+            <input type="email" id="commentEmail" placeholder="Tu correo electrónico" class="comment-input">
+        </div>
+        <textarea id="commentText" placeholder="Escribe tu comentario aquí..."></textarea>
+        <button onclick="addComment()" class="btn-comment">Publicar Comentario</button>
+    </div>
+    <div id="commentsList" class="comments-list">
+        <!-- Comments will be loaded here -->
+    </div>
+</section>
+
+<!-- Pagination -->
+{% if pagination.total_pages > 1 %}
+<nav class="navigation pagination" aria-label="Publicaciones">
+    <h2 class="screen-reader-text">Navegación de publicaciones</h2>
+    <div class="nav-links">
+        {% if pagination.has_prev %}
+        <a class="prev page-numbers" href="?page={{ pagination.prev_num }}">
+            <i class="fas fa-angle-left"></i> Anterior
+        </a>
+        {% endif %}
+        
+        {% for page_num in range(1, pagination.total_pages + 1) %}
+            {% if page_num == pagination.page %}
+            <span class="page-numbers current">{{ page_num }}</span>
+            {% elif page_num == 1 or page_num == pagination.total_pages or (page_num >= pagination.page - 2 and page_num <= pagination.page + 2) %}
+            <a class="page-numbers" href="?page={{ page_num }}">{{ page_num }}</a>
+            {% elif page_num == pagination.page - 3 or page_num == pagination.page + 3 %}
+            <span class="page-numbers dots">…</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <a class="next page-numbers" href="?page={{ pagination.next_num }}">
+            Siguiente <i class="fas fa-angle-right"></i>
+        </a>
+        {% endif %}
+    </div>
+</nav>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Handle hash navigation when page loads with hash (e.g., ?cat=2#inicio)
+document.addEventListener('DOMContentLoaded', function() {
+    if (window.location.hash) {
+        // Small delay to ensure page is fully rendered
+        setTimeout(function() {
+            const target = document.querySelector(window.location.hash);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Ferrocarril Esp{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="/static/ferrocarril-theme.css">
+    <script src="https://cdn.tiny.cloud/1/ekwdtnjwdh2wcjuek16wwveuzh7h75ihxvu4yr133l46jbwl/tinymce/8/tinymce.min.js" referrerpolicy="origin" crossorigin="anonymous"></script>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="wp-body">
+    <div id="page" class="site">
+        <a class="skip-link screen-reader-text" href="#content">Saltar al contenido</a>
+        
+        <header id="masthead" class="site-header">
+            <div class="container">
+                <div class="logo">
+                    <a href="/" class="custom-logo-link" rel="home">
+                        <img src="/static/images/logo-ferrocarril-esp.png" alt="Ferrocarril Esp" class="logo-img">
+                    </a>
+                </div>
+                
+                <nav class="nav">
+                    <ul class="nav-menu">
+                        <li><a href="/">Inicio</a></li>
+                        <li class="dropdown">
+                            <a href="/lines">Líneas</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/lines">Todas las Líneas</a></li>
+                                <li><a href="/lines?type=iberico">Ancho Ibérico</a></li>
+                                <li><a href="/lines?type=metrico">Ancho Métrico</a></li>
+                                <li><a href="/lines?type=internacional">Ancho Internacional</a></li>
+                                <li><a href="/lines?status=cerrada">Líneas Cerradas</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="/projects">Proyectos</a>
+                            <ul class="dropdown-menu">
+                                <li><a href="/projects">Todos los Proyectos</a></li>
+                                <li><a href="/projects?status=planning">Planificación</a></li>
+                                <li><a href="/projects?status=construction">Construcción</a></li>
+                                <li><a href="/projects?status=completed">Finalizado</a></li>
+                                <li><a href="/projects?status=suspended">Suspendido</a></li>
+                            </ul>
+                        </li>
+                        <li><a href="/events">Curiosidades</a></li>
+                        <li><a href="/">Noticias</a></li>
+                        <li><a href="/cities">Desarrollo<br>ciudades</a></li>
+                        <li><a href="/stations">Estaciones de<br>tren</a></li>
+                    </ul>
+                </nav>
+                
+                <div class="header-right">
+                    {% if is_admin %}
+                    <div class="admin-menu-item">
+                        <a href="/admin"><i class="fas fa-cog"></i> Admin</a>
+                    </div>
+                    {% else %}
+                    <div class="login-button">
+                        <a href="/login"><i class="fas fa-user"></i> Login</a>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Barra de búsqueda -->
+                    <div class="search-container">
+                        <form role="search" method="get" class="search-form" action="/search">
+                            <input type="text" id="searchInput" placeholder="Buscar en el blog..." class="search-input" name="q">
+                            <div id="searchResults" class="search-results"></div>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="mobile-menu-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </header>
+    
+    {% block hero %}{% endblock %}
+        
+        <div id="content" class="site-content">
+            <div class="container">
+                <div class="content-area">
+                    <main id="primary" class="site-main">
+                        {% block content %}{% endblock %}
+                    </main>
+                </div>
+                
+                {% if not hide_sidebar %}{% block sidebar %}
+                <aside id="secondary" class="widget-area sidebar">
+                    <section class="widget widget_author_bio">
+                        <div class="author-bio">
+                            <div class="author-avatar">
+                                <img src="/static/images/author-avatar.svg" alt="Autor" class="avatar">
+                            </div>
+                            <div class="author-info">
+                                <h3 class="author-name">Juan Macías</h3>
+                                <p class="author-description">Entusiasta del ferrocarril y especialista en infraestructuras ferroviarias en España.</p>
+                                <div class="author-social">
+                                    <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                                    <a href="#" class="social-link"><i class="fab fa-linkedin"></i></a>
+                                    <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section class="widget widget_search">
+                        <h2 class="widget-title">Buscar</h2>
+                        <form role="search" method="get" class="search-form" action="/search">
+                            <label>
+                                <span class="screen-reader-text">Buscar:</span>
+                                <input type="search" class="search-field" placeholder="Buscar &hellip;" value="" name="q">
+                            </label>
+                            <button type="submit" class="search-submit">
+                                <span class="screen-reader-text">Buscar</span>
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </form>
+                    </section>
+                    
+                    <section class="widget widget_calendar">
+                        <h2 class="widget-title">Calendario</h2>
+                        <div id="calendar_wrap">
+                            <table id="wp-calendar">
+                                <thead>
+                                    <tr>
+                                        <th scope="col" title="Lunes">L</th>
+                                        <th scope="col" title="Martes">M</th>
+                                        <th scope="col" title="Miércoles">X</th>
+                                        <th scope="col" title="Jueves">J</th>
+                                        <th scope="col" title="Viernes">V</th>
+                                        <th scope="col" title="Sábado">S</th>
+                                        <th scope="col" title="Domingo">D</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3" class="pad">&nbsp;</td>
+                                        <td>1</td>
+                                        <td>2</td>
+                                        <td>3</td>
+                                        <td>4</td>
+                                    </tr>
+                                    <tr>
+                                        <td>5</td>
+                                        <td>6</td>
+                                        <td>7</td>
+                                        <td>8</td>
+                                        <td>9</td>
+                                        <td>10</td>
+                                        <td>11</td>
+                                    </tr>
+                                    <tr>
+                                        <td id="today">12</td>
+                                        <td>13</td>
+                                        <td>14</td>
+                                        <td>15</td>
+                                        <td>16</td>
+                                        <td>17</td>
+                                        <td>18</td>
+                                    </tr>
+                                    <tr>
+                                        <td>19</td>
+                                        <td>20</td>
+                                        <td>21</td>
+                                        <td>22</td>
+                                        <td>23</td>
+                                        <td>24</td>
+                                        <td>25</td>
+                                    </tr>
+                                    <tr>
+                                        <td>26</td>
+                                        <td>27</td>
+                                        <td>28</td>
+                                        <td>29</td>
+                                        <td>30</td>
+                                        <td class="pad" colspan="2">&nbsp;</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    
+                    <section class="widget widget_categories">
+                        <h2 class="widget-title">Categorías</h2>
+                        <ul>
+                            <li class="cat-item"><a href="/lines">Líneas</a></li>
+                            <li class="cat-item"><a href="/stations">Estaciones</a></li>
+                            <li class="cat-item"><a href="/projects">Proyectos</a></li>
+                            <li class="cat-item"><a href="/events">Eventos</a></li>
+                            <li class="cat-item"><a href="/cities">Ciudades</a></li>
+                        </ul>
+                    </section>
+                    
+                    <section class="widget widget_recent_entries">
+                        <h2 class="widget-title">Entradas Recientes</h2>
+                        <ul>
+                            <li><a href="#">Nueva línea de alta velocidad Madrid-León</a></li>
+                            <li><a href="#">Modernización de la estación de Atocha</a></li>
+                            <li><a href="#">Inauguración del nuevo tren regional</a></li>
+                            <li><a href="#">Plan de expansión ferroviaria 2025-2030</a></li>
+                        </ul>
+                    </section>
+                </aside>
+                {% endblock %}{% endif %}
+            </div>
+        </div>
+        
+        <footer id="colophon" class="site-footer">
+            <div class="footer-widgets">
+                <div class="container">
+                    <div class="footer-widget-area">
+                        <div class="footer-column">
+                            <section class="widget widget_text">
+                                <h2 class="widget-title">Sobre Ferrocarril Esp</h2>
+                                <div class="textwidget">
+                                    <p>Tu fuente de información sobre el ferrocarril en España. Noticias, proyectos, líneas y estaciones del sistema ferroviario español.</p>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="footer-column">
+                            <section class="widget widget_nav_menu">
+                                <h2 class="widget-title">Enlaces Rápidos</h2>
+                                <div class="menu-footer-container">
+                                    <ul id="footer-menu" class="menu">
+                                        <li class="menu-item"><a href="/lines">Líneas</a></li>
+                                        <li class="menu-item"><a href="/stations">Estaciones</a></li>
+                                        <li class="menu-item"><a href="/projects">Proyectos</a></li>
+                                        <li class="menu-item"><a href="/events">Eventos</a></li>
+                                    </ul>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="footer-column">
+                            <section class="widget widget_text">
+                                <h2 class="widget-title">Contacto</h2>
+                                <div class="textwidget">
+                                    <p><i class="fas fa-envelope"></i> info@ferrocarril.esp</p>
+                                    <p><i class="fas fa-phone"></i> +34 900 123 456</p>
+                                    <div class="footer-social">
+                                        <a href="#" class="social-link"><i class="fab fa-twitter"></i></a>
+                                        <a href="#" class="social-link"><i class="fab fa-facebook"></i></a>
+                                        <a href="#" class="social-link"><i class="fab fa-instagram"></i></a>
+                                        <a href="#" class="social-link"><i class="fab fa-youtube"></i></a>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="site-info">
+                <div class="container">
+                    <p class="copyright">&copy; 2025 Ferrocarril Esp. Todos los derechos reservados.</p>
+                    <p class="theme-credits">Tema Ferrocarril desarrollado con FastAPI.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+    
+    <script src="/static/ferrocarril-theme.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

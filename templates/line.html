@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ line.line_number }} - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="line-detail-page mt-4">
+    <!-- Breadcrumb -->
+    <nav aria-label="breadcrumb" class="breadcrumb-nav">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+            <li class="breadcrumb-item"><a href="/lines">Líneas</a></li>
+            <li class="breadcrumb-item active">{{ line.line_number }}</li>
+        </ol>
+    </nav>
+
+            <!-- Line Details Card -->
+    <div class="card">
+        <div class="card-header">
+            <h3>
+                <i class="fas fa-train"></i> 
+                Línea {{ line.line_number }}
+            </h3>
+            <div class="card-header-actions">
+                <span class="badge status-badge">{{ line.status or 'Estado no especificado' }}</span>
+                {% if is_admin %}
+                <div class="btn-group" role="group">
+                    <a href="/admin/lines/{{ line.id }}/edit" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+                    <form method="POST" action="/admin/lines/{{ line.id }}/delete" 
+                          onsubmit="return confirm('¿Estás seguro de que quieres eliminar esta línea?')">
+                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>Descripción</h5>
+                            <div class="lead">{{ line.description | safe if line.description else 'Sin descripción disponible' }}</div>
+                            
+                            {% if line.cities_served %}
+                            <h5 class="mt-4">Ciudades Servidas</h5>
+                            <div class="d-flex flex-wrap gap-2">
+                                {% for city in line.cities_served %}
+                                <span class="badge bg-secondary">{{ city }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h5>Información de la Línea</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span><strong>Número:</strong></span>
+                                    <span>{{ line.line_number }}</span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span><strong>Estado:</strong></span>
+                                    <span class="badge bg-info">{{ line.status or 'No especificado' }}</span>
+                                </li>
+                                {% if line.category_id %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span><strong>Categoría:</strong></span>
+                                    <span>Categoría {{ line.category_id }}</span>
+                                </li>
+                                {% endif %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span><strong>Ciudades:</strong></span>
+                                    <span>{{ line.cities_served|length if line.cities_served else 0 }}</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted">
+                                    <i class="bi bi-clock"></i>
+                                    Creada: {{ line.created_at.strftime('%d de %B de %Y') if line.created_at else 'Fecha no disponible' }}
+                                    {% if line.updated_at and line.updated_at != line.created_at %}
+                                    | Actualizada: {{ line.updated_at.strftime('%d de %B de %Y') }}
+                                    {% endif %}
+                                </small>
+                                <a href="/lines" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Volver a Líneas
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+</div>
+{% endblock %}

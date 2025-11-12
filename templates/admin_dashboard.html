@@ -1,0 +1,209 @@
+{% extends "admin_layout.html" %}
+
+{% block title %}Dashboard - Panel de Administración{% endblock %}
+
+{% block content %}
+<div class="admin-page-header">
+    <h1>Dashboard</h1>
+    <div class="admin-actions">
+        <button class="btn btn-primary" onclick="location.href='/'">
+            <i class="fas fa-external-link-alt me-2"></i>Ver Sitio
+        </button>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #e3f2fd; color: #1976d2;">
+                    <i class="fas fa-newspaper"></i>
+                </div>
+                <div class="stat-number">{{ stats.posts_count or 0 }}</div>
+                <div class="stat-label">Posts Publicados</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #f3e5f5; color: #7b1fa2;">
+                    <i class="fas fa-route"></i>
+                </div>
+                <div class="stat-number">{{ stats.lines_count or 0 }}</div>
+                <div class="stat-label">Líneas</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #e8f5e8; color: #388e3c;">
+                    <i class="fas fa-train"></i>
+                </div>
+                <div class="stat-number">{{ stats.stations_count or 0 }}</div>
+                <div class="stat-label">Estaciones</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #fff3e0; color: #f57c00;">
+                    <i class="fas fa-project-diagram"></i>
+                </div>
+                <div class="stat-number">{{ stats.projects_count or 0 }}</div>
+                <div class="stat-label">Proyectos</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #fce4ec; color: #c2185b;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="stat-number">{{ stats.events_count or 0 }}</div>
+                <div class="stat-label">Eventos</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #e0f2f1; color: #00796b;">
+                    <i class="fas fa-city"></i>
+                </div>
+                <div class="stat-number">{{ stats.cities_count or 0 }}</div>
+                <div class="stat-label">Ciudades</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #f1f8e9; color: #689f38;">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <div class="stat-number">{{ stats.categories_count or 0 }}</div>
+                <div class="stat-label">Categorías</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="admin-card">
+            <div class="card-body">
+                <div class="stat-icon" style="background-color: #e8eaf6; color: #3f51b5;">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-number">{{ stats.pages_count or 0 }}</div>
+                <div class="stat-label">Páginas</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity and Quick Actions -->
+<div class="row">
+    <div class="col-lg-6 mb-4">
+        <div class="recent-activity">
+            <h5><i class="fas fa-clock me-2"></i>Posts Recientes</h5>
+            {% if recent_posts %}
+            {% for post in recent_posts %}
+            <div class="activity-item">
+                <div class="activity-icon" style="background-color: #e3f2fd;">
+                    <i class="fas fa-newspaper" style="color: #1976d2;"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">{{ post.title }}</div>
+                    <div class="activity-time">{{ post.created_at.strftime('%d/%m/%Y') }} - {{ post.author }}</div>
+                </div>
+                <div class="activity-actions">
+                    <a href="/edit/{{ post.id }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-3">
+                <p class="text-muted">No hay posts recientes.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-lg-6 mb-4">
+        <div class="recent-activity">
+            <h5><i class="fas fa-calendar me-2"></i>Eventos Recientes</h5>
+            {% if recent_events %}
+            {% for event in recent_events %}
+            <div class="activity-item">
+                <div class="activity-icon" style="background-color: #fce4ec;">
+                    <i class="fas fa-calendar-alt" style="color: #c2185b;"></i>
+                </div>
+                <div class="activity-content">
+                    <div class="activity-title">{{ event.title }}</div>
+                    <div class="activity-time">{{ event.event_date.strftime('%d/%m/%Y') }} - {{ event.event_type }}</div>
+                </div>
+                <div class="activity-actions">
+                    <a href="/admin/events/{{ event.id }}/edit" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-3">
+                <p class="text-muted">No hay eventos recientes.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row">
+    <div class="col-12">
+        <div class="admin-card">
+            <div class="card-body">
+                <h5 class="card-title mb-4">
+                    <i class="fas fa-bolt me-2"></i>Acciones Rápidas
+                </h5>
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <a href="/new" class="btn btn-primary w-100">
+                            <i class="fas fa-plus me-2"></i>Nuevo Post
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/lines/new" class="btn btn-success w-100">
+                            <i class="fas fa-plus me-2"></i>Nueva Línea
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/stations/new" class="btn btn-info w-100">
+                            <i class="fas fa-plus me-2"></i>Nueva Estación
+                        </a>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <a href="/admin/projects/new" class="btn btn-warning w-100">
+                            <i class="fas fa-plus me-2"></i>Nuevo Proyecto
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

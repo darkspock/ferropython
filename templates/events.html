@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}Curiosidades - Ferrocarril Esp{% endblock %}
+
+{% block content %}
+<div class="lines-page">
+    <div class="lines-header">
+        <h1>Curiosidades</h1>
+        {% if is_admin %}
+        <a href="/admin/posts/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Nueva Curiosidad
+        </a>
+        {% endif %}
+    </div>
+
+    {% if posts %}
+    <div class="lines-list">
+        {% for post in posts %}
+        <article class="line-card">
+            <div class="line-card-header">
+                <h2 class="line-number">{{ post.title }}</h2>
+                <div class="line-badges">
+                    {% if post.author %}
+                    <span class="badge status-unknown">{{ post.author }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="line-card-body">
+                <p class="line-description">{{ post.content | strip_html or 'Sin descripción disponible' }}</p>
+                <div class="line-details">
+                    <div class="line-detail-item">
+                        <i class="fas fa-calendar"></i>
+                        <span>Publicado: {{ post.created_at.strftime('%d de %B de %Y') if post.created_at else 'Fecha no disponible' }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="line-card-footer">
+                <a href="/post/{{ post.id }}" class="btn-view-details">
+                    Ver detalles <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </article>
+        {% endfor %}
+    </div>
+    
+    {% if pagination and pagination.total_pages > 1 %}
+    <div class="pagination mt-4">
+        {% if pagination.has_prev %}
+        <a href="?page={{ pagination.prev_page }}" class="btn btn-outline-secondary">Anterior</a>
+        {% endif %}
+        <span class="mx-3">Página {{ pagination.page }} de {{ pagination.total_pages }}</span>
+        {% if pagination.has_next %}
+        <a href="?page={{ pagination.next_page }}" class="btn btn-outline-secondary">Siguiente</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="no-lines">
+        <i class="fas fa-calendar-event"></i>
+        <h3>No hay curiosidades registradas</h3>
+        <p>Comienza agregando la primera curiosidad ferroviaria.</p>
+        {% if is_admin %}
+        <a href="/admin/posts/new" class="btn-new-line">
+            <i class="fas fa-plus"></i> Agregar Curiosidad
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
