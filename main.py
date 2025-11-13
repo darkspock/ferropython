@@ -132,6 +132,16 @@ def strip_html(text):
 templates.env.filters["strip_html"] = strip_html
 
 
+def render_template(request: Request, template_name: str, context: dict = None):
+    """Helper function to render template with common context"""
+    if context is None:
+        context = {}
+    # Merge common context with provided context
+    common_context = get_template_context(request)
+    context.update(common_context)
+    return templates.TemplateResponse(template_name, {"request": request, **context})
+
+
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     # Show the actual home page with sections
